@@ -25,34 +25,6 @@ const Student_Manage = () => {
               <td className="border border-gray-300 px-4 py-2">Row 1, Col 4</td>
               <td className="border border-gray-300 px-4 py-2">Row 1, Col 5</td>
             </tr>
-            <tr className="hover:bg-blue-100 transition duration-300">
-              <td className="border border-gray-300 px-4 py-2">Row 2, Col 1</td>
-              <td className="border border-gray-300 px-4 py-2">Row 2, Col 2</td>
-              <td className="border border-gray-300 px-4 py-2">Row 2, Col 3</td>
-              <td className="border border-gray-300 px-4 py-2">Row 2, Col 4</td>
-              <td className="border border-gray-300 px-4 py-2">Row 2, Col 5</td>
-            </tr>
-            <tr className="bg-gray-100 hover:bg-blue-100 transition duration-300">
-              <td className="border border-gray-300 px-4 py-2">Row 3, Col 1</td>
-              <td className="border border-gray-300 px-4 py-2">Row 3, Col 2</td>
-              <td className="border border-gray-300 px-4 py-2">Row 3, Col 3</td>
-              <td className="border border-gray-300 px-4 py-2">Row 3, Col 4</td>
-              <td className="border border-gray-300 px-4 py-2">Row 3, Col 5</td>
-            </tr>
-            <tr className="hover:bg-blue-100 transition duration-300">
-              <td className="border border-gray-300 px-4 py-2">Row 4, Col 1</td>
-              <td className="border border-gray-300 px-4 py-2">Row 4, Col 2</td>
-              <td className="border border-gray-300 px-4 py-2">Row 4, Col 3</td>
-              <td className="border border-gray-300 px-4 py-2">Row 4, Col 4</td>
-              <td className="border border-gray-300 px-4 py-2">Row 4, Col 5</td>
-            </tr>
-            <tr className="bg-gray-100 hover:bg-blue-100 transition duration-300">
-              <td className="border border-gray-300 px-4 py-2">Row 5, Col 1</td>
-              <td className="border border-gray-300 px-4 py-2">Row 5, Col 2</td>
-              <td className="border border-gray-300 px-4 py-2">Row 5, Col 3</td>
-              <td className="border border-gray-300 px-4 py-2">Row 5, Col 4</td>
-              <td className="border border-gray-300 px-4 py-2">Row 5, Col 5</td>
-            </tr>
           </tbody>
         </table>
       </div>
