@@ -3,45 +3,44 @@ import PropTypes from "prop-types";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { RiLogoutBoxRLine } from "react-icons/ri";
 import { FaTachometerAlt } from "react-icons/fa";
-import { IoPersonAddSharp } from "react-icons/io5";
+import { FaUsersLine } from "react-icons/fa6";
+import { BsDot } from "react-icons/bs";
 import { Link } from "react-router-dom";
-import { IoMdArrowDropdown } from "react-icons/io";
+import { IoMdArrowDropdown, IoMdArrowDropright } from "react-icons/io";
 
 const MasterPage = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [studentSubmenuOpen, setStudentSubmenuOpen] = useState(false);
+  const [facultySubmenuOpen, setFacultySubmenuOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-
-  const sidebarClass = "bg-white text-black shadow-lg";
+  const toggleStudentSubmenu = () => setStudentSubmenuOpen(!studentSubmenuOpen);
+  const toggleFacultySubmenu = () => setFacultySubmenuOpen(!facultySubmenuOpen);
 
   return (
     <div className="h-screen flex flex-col bg-white text-black">
       {/* Navbar */}
       <nav className="p-4 fixed w-full z-10 flex items-center justify-between bg-blue-600 text-white">
         <div className="flex items-center">
-          <img src="./Logo/IMG_1599.PNG" alt="" className="ml-4 text-xl  w-[200px]"/>
+          <Link to={'/dashboard'}>
+          <img src="./Logo/IMG_1599.PNG" alt="" className="ml-4 w-[200px]" />
+          </Link>
         </div>
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <button
-              onClick={toggleDropdown}
-              className="bg-dark-500 p-2 rounded text-white flex items-center"
-            >
-              <img
-                src="https://via.placeholder.com/150"
-                className="w-8 h-8 mr-3 rounded-full"
-              />
+            <button onClick={toggleDropdown} className="bg-dark-500 p-2 rounded text-white flex items-center">
+              <img src="https://via.placeholder.com/150" className="w-8 h-8 mr-3 rounded-full" />
               Virani Jaydeep
               <IoMdArrowDropdown className="ml-2 w-5 h-5" />
             </button>
             {dropdownOpen && (
               <ul className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg">
-                <li className="px-4 py-2 cursor-pointer hover:scale-106 hover:font-bold">
+                <li className="px-4 py-2 hover:font-bold ">
                   <Link to="/settings">Settings</Link>
                 </li>
-                <li className="px-4 py-2 cursor-pointer hover:scale-106 hover:font-bold">
+                <li className="px-4 py-2 hover:font-bold">
                   <Link to="/logout">Logout</Link>
                 </li>
               </ul>
@@ -53,53 +52,59 @@ const MasterPage = ({ children }) => {
       {/* Layout Below Navbar */}
       <div className="flex flex-1 pt-16">
         {/* Sidebar */}
-        <div
-          className={`mt-5 transition-transform duration-300 ${
-            sidebarOpen ? "w-64" : "w-16"
-          } ${sidebarClass} flex flex-col h-full`}
-        >
-          <button
-            onClick={toggleSidebar}
-            className="text-black p-2 py-4 px-4"
-            aria-label="Toggle Sidebar"
-            aria-expanded={sidebarOpen}
-          >
+        <div className={`mt-5 transition-transform duration-300 ${sidebarOpen ? "w-64" : "w-16"} bg-white shadow-lg flex flex-col h-full relative`}>
+          <button onClick={toggleSidebar} className="text-black p-2 pl-4" aria-label="Toggle Sidebar">
             <GiHamburgerMenu className="w-6 h-6" />
           </button>
           <ul className="flex-1 w-full">
-            <li className="flex items-center py-4 px-4 hover:scale-106 hover:font-bold">
-              <FaTachometerAlt className="w-5 h-5"/>
-              {sidebarOpen && (
-                <Link to="/dashboard" className="ml-4">
-                  Dashboard
-                </Link>
-              )}
+            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
+              <FaTachometerAlt className="w-5 h-5" />
+              {sidebarOpen && <Link to="/dashboard" className="ml-4">Dashboard</Link>}
             </li>
-            <li className="flex items-center py-4 px-4 hover:scale-106 hover:font-bold">
-              <IoPersonAddSharp  className="w-5 h-5" />
-              {sidebarOpen && (
-                <Link to="/student_manage" className="ml-4">
-                  Add Student
-                </Link>
-              )}
+
+            {/* Student Submenu */}
+            <li className="py-4 px-4 hover:font-bold hover:scale-106 cursor-pointer flex items-center" onClick={toggleStudentSubmenu}>
+              <FaUsersLine className="w-5 h-5" />
+              {sidebarOpen && <span className="ml-4">Student</span>}
+              {sidebarOpen && (studentSubmenuOpen ? <IoMdArrowDropdown className="ml-auto" /> : <IoMdArrowDropright className="ml-auto" />)}
             </li>
-            <li className="flex items-center py-4 px-4 hover:scale-106 hover:font-bold">
-              <IoPersonAddSharp  className="w-5 h-5" />
-              {sidebarOpen && (
-                <Link to="/faculty_manage" className="ml-4">
-                  Add Faculty
-                </Link>
-              )}
+            {studentSubmenuOpen && (
+              <ul className={`transition-all duration-300 ${sidebarOpen ? "ml-10 bg-white p-2 rounded" : "absolute left-16 w-48 bg-white shadow-lg p-2 rounded"}`}>
+                <li className="py-2 flex items-center hover:font-bold hover:scale-106">
+                  <BsDot className="w-5 h-5 mr-2" />
+                  <Link to="/add_student">Add Student</Link>
+                </li>
+                <li className="py-2 flex items-center hover:font-bold hover:scale-106">
+                  <BsDot className="w-5 h-5 mr-2" />
+                  <Link to="/student_manage">Manage Students</Link>
+                </li>
+              </ul>
+            )}
+
+            {/* Faculty Submenu */}
+            <li className="py-4 px-4 hover:font-bold hover:scale-106 cursor-pointer flex items-center" onClick={toggleFacultySubmenu}>
+              <FaUsersLine className="w-5 h-5" />
+              {sidebarOpen && <span className="ml-4">Faculty</span>}
+              {sidebarOpen && (facultySubmenuOpen ? <IoMdArrowDropdown className="ml-auto" /> : <IoMdArrowDropright className="ml-auto" />)}
             </li>
+            {facultySubmenuOpen && (
+              <ul className={`transition-all duration-300 ${sidebarOpen ? "ml-10 bg-white p-2 rounded" : "absolute left-16 w-48 bg-white shadow-lg p-2 rounded"}`}>
+                <li className="py-2 flex items-center hover:font-bold hover:scale-106">
+                  <BsDot className="w-5 h-5 mr-2" />
+                  <Link to="/add_faculty">Add Faculty</Link>
+                </li>
+                <li className="py-2 flex items-center hover:font-bold hover:scale-106">
+                  <BsDot className="w-5 h-5 mr-2" />
+                  <Link to="/faculty_manage">Manage Faculty</Link>
+                </li>
+              </ul>
+            )}
           </ul>
+
           <ul>
-            <li className="flex items-center py-4 px-4 mb-4 hover:scale-106 hover:font-bold">
-              <RiLogoutBoxRLine  className="w-6 h-6" />
-              {sidebarOpen && (
-                <Link to="/logout" className="ml-4">
-                  Logout
-                </Link>
-              )}
+            <li className="flex items-center py-4 px-4 mb-4 hover:font-bold hover:scale-106">
+              <RiLogoutBoxRLine className="w-6 h-6" />
+              {sidebarOpen && <Link to="/logout" className="ml-4">Logout</Link>}
             </li>
           </ul>
         </div>

@@ -3,7 +3,7 @@ import * as Yup from "yup";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
-const Add_Student = () => {
+const Add_Faculty = () => {
   const navigate = useNavigate();
 
   const validationSchema = Yup.object({
@@ -61,7 +61,7 @@ const Add_Student = () => {
     <div className="flex justify-center items-center">
       <div className="w-full bg-gray-100 shadow-lg rounded-lg p-6 mt-3">
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-4">
-          Add New Student
+          Add New Faculty
         </h2>
         <form className="space-y-4" onSubmit={formik.handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -229,7 +229,7 @@ const Add_Student = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-medium pb-3">
-              Student Image
+              Faculty Image
             </label>
             <input
               type="file"
@@ -251,7 +251,7 @@ const Add_Student = () => {
               type="submit"
               className="w-50 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 transition"
             >
-              Add Student
+              Add Faculty
             </button>
           </div>
         </form>
@@ -260,4 +260,4 @@ const Add_Student = () => {
   );
 };
 
-export default Add_Student;
+export default Add_Faculty;
