@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { IoIosLogOut } from "react-icons/io";
+import { RiLogoutBoxRLine } from "react-icons/ri";
 import { FaTachometerAlt } from "react-icons/fa";
 import { IoPersonAddSharp } from "react-icons/io5";
 import { Link } from "react-router-dom";
@@ -21,7 +21,7 @@ const MasterPage = ({ children }) => {
       {/* Navbar */}
       <nav className="p-4 fixed w-full z-10 flex items-center justify-between bg-blue-600 text-white">
         <div className="flex items-center">
-          <span className="ml-4 text-xl font-semibold">Navbar</span>
+          <img src="./Logo/IMG_1599.PNG" alt="" className="ml-4 text-xl  w-[200px]"/>
         </div>
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -66,7 +66,7 @@ const MasterPage = ({ children }) => {
           >
             <GiHamburgerMenu className="w-6 h-6" />
           </button>
-          <ul className="flex-1 w-full mt-3">
+          <ul className="flex-1 w-full">
             <li className="flex items-center py-4 px-4 hover:scale-106 hover:font-bold">
               <FaTachometerAlt className="w-5 h-5"/>
               {sidebarOpen && (
@@ -94,7 +94,7 @@ const MasterPage = ({ children }) => {
           </ul>
           <ul>
             <li className="flex items-center py-4 px-4 mb-4 hover:scale-106 hover:font-bold">
-              <IoIosLogOut className="w-6 h-6" />
+              <RiLogoutBoxRLine  className="w-6 h-6" />
               {sidebarOpen && (
                 <Link to="/logout" className="ml-4">
                   Logout

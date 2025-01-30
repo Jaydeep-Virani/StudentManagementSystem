@@ -1,10 +1,13 @@
+import { Link } from "react-router-dom";
 const Student_Manage = () => {
   return (
     <>
       <div className="mb-4 ">
+      <Link to="/add_student">
         <button className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-500 transition duration-300 hover:scale-104">
           Add Student
         </button>
+      </Link>
       </div>
       <div className="overflow-x-auto">
         <table className="table-auto border-collapse border border-gray-300 w-full shadow-lg rounded-lg">
