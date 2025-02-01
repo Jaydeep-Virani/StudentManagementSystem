@@ -243,7 +243,7 @@ const Add_Student = () => {
               <span className="text-red-500 text-sm">
                 {formik.errors.image}
               </span>
-            )}
+            )}  
           </div>
 
           <div className="text-left">

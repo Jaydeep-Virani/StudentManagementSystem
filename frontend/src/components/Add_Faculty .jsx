@@ -48,12 +48,12 @@ const Add_Faculty = () => {
     onSubmit: () => {
       Swal.fire({
         title: "Success!",
-        text: "Student Successfully Added",
+        text: "Faculty Successfully Added",
         icon: "success",
         timer: 1000,
         showConfirmButton: false,
         timerProgressBar: true,
-      }).then(() => navigate("/student_manage"));
+      }).then(() => navigate("/faculty_manage"));
     },
   });
 
