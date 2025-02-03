@@ -58,8 +58,8 @@ const Add_Student = () => {
   });
 
   return (
-    <div className="flex justify-center items-center">
-      <div className="w-full bg-gray-100 shadow-lg rounded-lg p-6 mt-3">
+    <div className="flex justify-center items-center ">
+      <div className="w-full bg-gray-10 shadow-lg rounded-lg p-6 mt-3">
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-4">
           Add New Student
         </h2>

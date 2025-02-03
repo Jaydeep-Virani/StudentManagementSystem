@@ -4,7 +4,8 @@ const Login = () => {
         {/* Left Section */}
         <div className="w-full md:w-1/4 flex flex-col justify-center items-center px-6 md:px-12 lg:px-24">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold">EDUSPHERE</h1>
+            <img src="./Logo/IMG_1700.PNG" alt="" />
+            {/* <h1 className="text-3xl font-bold">EDUSPHERE</h1> */}
           </div>
           <h2 className="text-2xl font-semibold mb-2">Welcome Back!</h2>
           <p className="text-gray-500 mb-6">Sign in to continue to Edusphere.</p>
@@ -14,7 +15,7 @@ const Login = () => {
               <label className="block text-gray-700">Email</label>
               <input
                 type="email"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full px-4 py-2 border rounded focus:outline-sky-600"
                 placeholder="Enter your email"
               />
             </div>
@@ -22,7 +23,7 @@ const Login = () => {
               <label className="block text-gray-700">Password</label>
               <input
                 type="password"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full px-4 py-2 border rounded focus:outline-sky-600"
                 placeholder="Enter your password"
               />
             </div>

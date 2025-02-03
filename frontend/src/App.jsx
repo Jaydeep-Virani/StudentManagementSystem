@@ -13,6 +13,10 @@ import Profile from "./components/Profile";
 import Class_Manage from "./components/Class_Manage";
 import Subject_Manage from "./components/Subject_Manage";
 import Note_Manage from "./components/Note_Manage";
+import Material from "./components/Material";
+import Add_Material from "./components/Add_Material";
+import Leave_Manage from "./components/Leave_Manage";
+import Add_Leave from "./components/Add_Leave";
 
 const App = () => {
   
@@ -33,6 +37,10 @@ const App = () => {
         <Route path="/class_manage" element={ <MasterPage><Class_Manage /></MasterPage> }/>
         <Route path="/subject_manage" element={ <MasterPage><Subject_Manage /></MasterPage> }/>
         <Route path="/note_manage" element={ <MasterPage><Note_Manage /></MasterPage> }/>
+        <Route path="/materials" element={ <MasterPage><Material /></MasterPage> }/>
+        <Route path="/add_material" element={ <MasterPage><Add_Material /></MasterPage> }/>
+        <Route path="/add_leave" element={ <MasterPage><Add_Leave /></MasterPage> }/>
+        <Route path="/leave_manage" element={ <MasterPage><Leave_Manage /></MasterPage> }/>
       </Routes>
     </Router>
   );

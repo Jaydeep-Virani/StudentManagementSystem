@@ -7,6 +7,10 @@ import { FaUsers } from "react-icons/fa6";
 import { BsDot } from "react-icons/bs";
 import { FaCalendarAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { GiNotebook } from "react-icons/gi";
+import { SiGoogleclassroom } from "react-icons/si";
+import { MdSubject } from "react-icons/md";
+import { CgNotes } from "react-icons/cg";
 import { IoMdArrowDropdown, IoMdArrowDropright } from "react-icons/io";
 import { FaUser, FaCog, FaSignOutAlt, FaKey } from "react-icons/fa";
 
@@ -38,10 +42,7 @@ const MasterPage = ({ children }) => {
               onClick={toggleDropdown}
               className="bg-dark-500 p-2 rounded text-white flex items-center"
             >
-              <img
-                src="https://via.placeholder.com/150"
-                className="w-8 h-8 mr-3 rounded-full"
-              />
+              <img src="profile.png" className="w-8 h-8 mr-3 rounded-full" />
               Virani Jaydeep
               <IoMdArrowDropdown className="ml-2 w-5 h-5" />
             </button>
@@ -196,7 +197,7 @@ const MasterPage = ({ children }) => {
 
             {/* Manage Class */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <FaTachometerAlt className="w-5 h-5" />
+              <SiGoogleclassroom className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/class_manage" className="ml-4">
                   Manage Class
@@ -206,7 +207,7 @@ const MasterPage = ({ children }) => {
 
             {/* Manage Subject */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <FaTachometerAlt className="w-5 h-5" />
+              <MdSubject className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/subject_manage" className="ml-4">
                   Manage Subject
@@ -216,10 +217,50 @@ const MasterPage = ({ children }) => {
 
             {/* Manage Note */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <FaTachometerAlt className="w-5 h-5" />
+              <GiNotebook className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/note_manage" className="ml-4">
                   Manage Note
+                </Link>
+              )}
+            </li>
+
+            {/* Show Material */}
+            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
+              <CgNotes className="w-5 h-5" />
+              {sidebarOpen && (
+                <Link to="/materials" className="ml-4">
+                  All Material
+                </Link>
+              )}
+            </li>
+
+            {/* Add Material */}
+            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
+              <CgNotes className="w-5 h-5" />
+              {sidebarOpen && (
+                <Link to="/add_material" className="ml-4">
+                  Add Material
+                </Link>
+              )}
+            </li>
+
+            {/* Add Leave */}
+            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
+              <CgNotes className="w-5 h-5" />
+              {sidebarOpen && (
+                <Link to="/leave_manage" className="ml-4">
+                  Leave Manage
+                </Link>
+              )}
+            </li>
+
+            {/* Leave Manage */}
+            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
+              <CgNotes className="w-5 h-5" />
+              {sidebarOpen && (
+                <Link to="/add_leave" className="ml-4">
+                  Add Leave
                 </Link>
               )}
             </li>
@@ -240,9 +281,9 @@ const MasterPage = ({ children }) => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 p-6">{children}</div>
-          <footer className="p-4 bg-white text-black">
+          {/* <footer className="p-4 bg-white text-black">
             <p className="text-center">Footer Content</p>
-          </footer>
+          </footer> */}
         </div>
       </div>
     </div>

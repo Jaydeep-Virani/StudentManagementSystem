@@ -137,31 +137,27 @@ const Profile = () => {
               <div className="mt-6">
                 {activeTab === "overview" && (
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">
-                      Profile Overview
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <strong>First Name:</strong> Ethan
-                      </div>
-                      <div>
-                        <strong>Last Name:</strong> Leo
-                      </div>
-                      <div>
-                        <strong>Email:</strong> abcd@gmail.com
-                      </div>
-                      <div>
-                        <strong>Phone:</strong> 8200606297
-                      </div>
-                      <div>
-                        <strong>Gender:</strong> Male
-                      </div>
-                      <div>
-                        <strong>Date of Birth:</strong> 18-10-2007
-                      </div>
-                      <div>
-                        <strong>Address:</strong> Mountain View, California
-                      </div>
+                    <h3 className="mb-3">Profile</h3>
+                    <div className="grid grid-cols-1 border border-white divide-y">
+                      {[
+                        ["First Name", "Ethan"],
+                        ["Last Name", "Leo"],
+                        ["Email", "abcd@gmail.com"],
+                        ["Phone", "8200606297"],
+                        ["Gender", "Male"],
+                        ["Date Of Birth", "18-10-2007"],
+                        ["Address", "Mountain View, California"],
+                      ].map(([label, value], index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-2 border-b border-white"
+                        >
+                          <div className="bg-gray-100 p-2 border-r border-white font-semibold">
+                            {label}
+                          </div>
+                          <div className="bg-gray-50 p-2">{value}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
