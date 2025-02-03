@@ -14,7 +14,7 @@ import { AiFillRead } from "react-icons/ai";
 import { FaOutdent } from "react-icons/fa";
 import { PiNotebookFill } from "react-icons/pi";
 import { IoMdArrowDropdown, IoMdArrowDropright } from "react-icons/io";
-import { FaUser, FaCog, FaSignOutAlt, FaKey } from "react-icons/fa";
+import { FaUser, FaCog, FaSignOutAlt, FaKey, FaLock } from "react-icons/fa";
 
 const MasterPage = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -22,12 +22,24 @@ const MasterPage = ({ children }) => {
   const [studentSubmenuOpen, setStudentSubmenuOpen] = useState(false);
   const [facultySubmenuOpen, setFacultySubmenuOpen] = useState(false);
   const [holidaySubmenuOpen, setHolidaySubmenuOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [password, setPassword] = useState("");
+  const correctPassword = "admin123"; // Change this to integrate with authentication logic
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
   const toggleStudentSubmenu = () => setStudentSubmenuOpen(!studentSubmenuOpen);
   const toggleFacultySubmenu = () => setFacultySubmenuOpen(!facultySubmenuOpen);
   const toggleHolidaySubmenu = () => setHolidaySubmenuOpen(!holidaySubmenuOpen);
+  const handleLockScreen = () => setIsLocked(true);
+  const handleUnlock = () => {
+    if (password === correctPassword) {
+      setIsLocked(false);
+      setPassword("");
+    } else {
+      alert("Incorrect Password");
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-white text-black">
@@ -58,6 +70,10 @@ const MasterPage = ({ children }) => {
                   <FaKey className="w-4 h-4" />
                   <Link to="/change_password">Change Password</Link>
                 </li>
+                <li className="px-4 py-2 flex items-center gap-2 hover:font-bold hover:scale-102">
+                  <FaLock className="w-4 h-4" />
+                  <button onClick={handleLockScreen}>Lock Screen</button>
+                </li>
                 <li className="px-4 py-2 flex items-center gap-2 hover:font-bold border-b border-gray-300 hover:scale-102">
                   <FaCog className="w-4 h-4" />
                   <Link to="/settings">Settings</Link>
@@ -71,6 +87,27 @@ const MasterPage = ({ children }) => {
           </div>
         </div>
       </nav>
+      {/* Lock Screen Modal */}
+      {isLocked && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex flex-col items-center justify-center text-white z-50">
+          <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Screen Locked</h2>
+            <input
+              type="password"
+              className="border p-2 w-full rounded mb-4"
+              placeholder="Enter Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+              onClick={handleUnlock}
+            >
+              Unlock
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Layout Below Navbar */}
       <div className="flex flex-1 pt-16">
@@ -209,7 +246,7 @@ const MasterPage = ({ children }) => {
 
             {/* Manage Subject */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <PiNotebookFill  className="w-5 h-5" />
+              <PiNotebookFill className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/subject_manage" className="ml-4">
                   Manage Subject
@@ -239,7 +276,7 @@ const MasterPage = ({ children }) => {
 
             {/* Add Material */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <AiFillRead  className="w-5 h-5" />
+              <AiFillRead className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/add_material" className="ml-4">
                   Add Material
@@ -259,7 +296,7 @@ const MasterPage = ({ children }) => {
 
             {/* Leave Manage */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <FaOutdent  className="w-5 h-5" />
+              <FaOutdent className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/add_leave" className="ml-4">
                   Add Leave
@@ -267,7 +304,7 @@ const MasterPage = ({ children }) => {
               )}
             </li>
           </ul>
-          
+
           {/* Logout */}
           <ul>
             <li className="flex items-center py-4 px-4 mb-4 hover:font-bold hover:scale-106">
