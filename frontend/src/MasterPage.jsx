@@ -9,8 +9,10 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { GiNotebook } from "react-icons/gi";
 import { SiGoogleclassroom } from "react-icons/si";
-import { MdSubject } from "react-icons/md";
 import { CgNotes } from "react-icons/cg";
+import { AiFillRead } from "react-icons/ai";
+import { FaOutdent } from "react-icons/fa";
+import { PiNotebookFill } from "react-icons/pi";
 import { IoMdArrowDropdown, IoMdArrowDropright } from "react-icons/io";
 import { FaUser, FaCog, FaSignOutAlt, FaKey } from "react-icons/fa";
 
@@ -207,7 +209,7 @@ const MasterPage = ({ children }) => {
 
             {/* Manage Subject */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <MdSubject className="w-5 h-5" />
+              <PiNotebookFill  className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/subject_manage" className="ml-4">
                   Manage Subject
@@ -237,7 +239,7 @@ const MasterPage = ({ children }) => {
 
             {/* Add Material */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <CgNotes className="w-5 h-5" />
+              <AiFillRead  className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/add_material" className="ml-4">
                   Add Material
@@ -257,7 +259,7 @@ const MasterPage = ({ children }) => {
 
             {/* Leave Manage */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <CgNotes className="w-5 h-5" />
+              <FaOutdent  className="w-5 h-5" />
               {sidebarOpen && (
                 <Link to="/add_leave" className="ml-4">
                   Add Leave
@@ -265,6 +267,7 @@ const MasterPage = ({ children }) => {
               )}
             </li>
           </ul>
+          
           {/* Logout */}
           <ul>
             <li className="flex items-center py-4 px-4 mb-4 hover:font-bold hover:scale-106">

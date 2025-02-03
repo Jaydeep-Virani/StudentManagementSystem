@@ -17,6 +17,7 @@ import Material from "./components/Material";
 import Add_Material from "./components/Add_Material";
 import Leave_Manage from "./components/Leave_Manage";
 import Add_Leave from "./components/Add_Leave";
+import Logout from "./components/Logout";
 
 const App = () => {
   
@@ -25,6 +26,7 @@ const App = () => {
       <Routes>
         {/* Wrap routes with MasterPage */}
         <Route path="/" element={ <Login /> } />
+        <Route path="/logout" element={ <Logout /> } />
         <Route path="/dashboard" element={ <MasterPage><Dashboard /></MasterPage> }/>
         <Route path="/student_manage" element={ <MasterPage><Student_Manage /></MasterPage> }/>
         <Route path="/add_student" element={ <MasterPage><Add_Student /></MasterPage> }/>
