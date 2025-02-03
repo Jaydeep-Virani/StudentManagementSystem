@@ -22,6 +22,7 @@ const MasterPage = ({ children }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [studentSubmenuOpen, setStudentSubmenuOpen] = useState(false);
   const [facultySubmenuOpen, setFacultySubmenuOpen] = useState(false);
+  const [materialSubmenuOpen, setMaterialSubmenuOpen] = useState(false);
   const [holidaySubmenuOpen, setHolidaySubmenuOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [password, setPassword] = useState("");
@@ -29,9 +30,12 @@ const MasterPage = ({ children }) => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
   const toggleStudentSubmenu = () => setStudentSubmenuOpen(!studentSubmenuOpen);
   const toggleFacultySubmenu = () => setFacultySubmenuOpen(!facultySubmenuOpen);
+  const toggleMaterialSubmenu = () => setMaterialSubmenuOpen(!materialSubmenuOpen);
   const toggleHolidaySubmenu = () => setHolidaySubmenuOpen(!holidaySubmenuOpen);
+
   const handleLockScreen = () => setIsLocked(true);
   const handleUnlock = () => {
     if (password === correctPassword) {
@@ -39,10 +43,16 @@ const MasterPage = ({ children }) => {
       setPassword("");
     } else {
       Swal.fire({
-        icon: 'warning',
-        title: 'Incorrect Password',
-        text: 'Please enter the correct password to unlock the screen.',
-        confirmButtonText: 'Try Again'
+        icon: "warning",
+        title: "Incorrect Password",
+        confirmButtonText: "Try Again",
+        position: "top", // Aligns the alert at the top of the screen
+        toast: false, // Use a regular modal (not a toast)
+        showConfirmButton: true,
+        timer: 5000, // Optional: auto-close the alert after a delay (in milliseconds)
+        customClass: {
+          popup: "top-10 w-[500px] h-[300px]", // Increase width and height of the alert
+        },
       });
     }
   };
@@ -93,21 +103,23 @@ const MasterPage = ({ children }) => {
           </div>
         </div>
       </nav>
-      
+
       {/* Lock Screen Modal */}
       {isLocked && (
-        <div className="fixed inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center text-white z-50">
-          <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Screen Locked</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white z-50">
+          <div className="bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 text-black p-8 rounded-lg shadow-2xl w-96">
+            <h2 className="text-xl font-bold mb-4 text-center text-white">
+              Screen Locked
+            </h2>
             <input
               type="password"
-              className="border p-2 w-full rounded mb-4 focus:outline-sky-600"
+              className="border p-3 w-full font-bold text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
               placeholder="Enter Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 transition"
+              className="bg-gradient-to-r from-blue-500 via-teal-500 to-green-500 text-white px-8 py-4 rounded-lg w-full transform transition duration-300 ease-in-out hover:scale-110 hover:shadow-2xl hover:border-4 hover:border-white active:scale-95 active:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300"
               onClick={handleUnlock}
             >
               Unlock
@@ -208,6 +220,39 @@ const MasterPage = ({ children }) => {
               </ul>
             )}
 
+            {/* Material Submenu */}
+            <li
+              className="py-4 px-4 hover:font-bold hover:scale-106 cursor-pointer flex items-center"
+              onClick={toggleMaterialSubmenu}
+            >
+              <AiFillRead className="w-5 h-5" />
+              {sidebarOpen && <span className="ml-4">Material</span>}
+              {sidebarOpen &&
+                (materialSubmenuOpen ? (
+                  <IoMdArrowDropdown className="ml-auto" />
+                ) : (
+                  <IoMdArrowDropright className="ml-auto" />
+                ))}
+            </li>
+            {materialSubmenuOpen && (
+              <ul
+                className={`transition-all duration-300 ${
+                  sidebarOpen
+                    ? "ml-10 bg-white p-2 rounded"
+                    : "absolute left-16 w-48 bg-white shadow-lg p-2 rounded"
+                }`}
+              >
+                <li className="py-2 flex items-center hover:font-bold hover:scale-106">
+                  <BsDot className="w-5 h-5 mr-2" />
+                  <Link to="/add_material">Add Material</Link>
+                </li>
+                <li className="py-2 flex items-center hover:font-bold hover:scale-106">
+                  <BsDot className="w-5 h-5 mr-2" />
+                  <Link to="/materials">All Material</Link>
+                </li>
+              </ul>
+            )}
+
             {/* Holiday Submenu */}
             <li
               className="py-4 px-4 hover:font-bold hover:scale-106 cursor-pointer flex items-center"
@@ -271,25 +316,6 @@ const MasterPage = ({ children }) => {
               )}
             </li>
 
-            {/* Show Material */}
-            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <CgNotes className="w-5 h-5" />
-              {sidebarOpen && (
-                <Link to="/materials" className="ml-4">
-                  All Material
-                </Link>
-              )}
-            </li>
-
-            {/* Add Material */}
-            <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
-              <AiFillRead className="w-5 h-5" />
-              {sidebarOpen && (
-                <Link to="/add_material" className="ml-4">
-                  Add Material
-                </Link>
-              )}
-            </li>
 
             {/* Add Leave */}
             <li className="flex items-center py-4 px-4 hover:font-bold hover:scale-106">
