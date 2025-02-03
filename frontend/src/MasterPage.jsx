@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import Swal from "sweetalert2";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { RiLogoutBoxRLine } from "react-icons/ri";
 import { FaTachometerAlt } from "react-icons/fa";
@@ -37,7 +38,12 @@ const MasterPage = ({ children }) => {
       setIsLocked(false);
       setPassword("");
     } else {
-      alert("Incorrect Password");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incorrect Password',
+        text: 'Please enter the correct password to unlock the screen.',
+        confirmButtonText: 'Try Again'
+      });
     }
   };
 
@@ -87,20 +93,21 @@ const MasterPage = ({ children }) => {
           </div>
         </div>
       </nav>
+      
       {/* Lock Screen Modal */}
       {isLocked && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex flex-col items-center justify-center text-white z-50">
+        <div className="fixed inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center text-white z-50">
           <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Screen Locked</h2>
             <input
               type="password"
-              className="border p-2 w-full rounded mb-4"
+              className="border p-2 w-full rounded mb-4 focus:outline-sky-600"
               placeholder="Enter Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+              className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 transition"
               onClick={handleUnlock}
             >
               Unlock
