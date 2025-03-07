@@ -1,23 +1,23 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./Login";
 import MasterPage from "./MasterPage";
-import Dashboard from "./components/Dashboard";
-import Student_Manage from "./components/Student_Manage";
-import Add_Student from "./components/Add_Student";
-import Add_Faculty from "./components/Add_Faculty ";
-import FacultyManage from "./components/Faculty_Manage";
-import Holiday from "./components/Holiday";
-import Add_Holiday from "./components/Add_Holiday";
-import Change_Password from "./components/Change_Password";
-import Profile from "./components/Profile";
-import Class_Manage from "./components/Class_Manage";
-import Subject_Manage from "./components/Subject_Manage";
-import Note_Manage from "./components/Note_Manage";
-import Material from "./components/Material";
-import Add_Material from "./components/Add_Material";
-import Leave_Manage from "./components/Leave_Manage";
-import Add_Leave from "./components/Add_Leave";
-import Logout from "./components/Logout";
+import Dashboard from "./Pages/Dashboard";
+import Student_Manage from "./Pages/Student_Manage";
+import Add_Student from "./Pages/Add_Student";
+import Add_Faculty from "./Pages/Add_Faculty ";
+import FacultyManage from "./Pages/Faculty_Manage";
+import Holiday from "./Pages/Holiday";
+import Add_Holiday from "./Pages/Add_Holiday";
+import Change_Password from "./Pages/Change_Password";
+import Profile from "./Pages/Profile";
+import Class_Manage from "./Pages/Class_Manage";
+import Subject_Manage from "./Pages/Subject_Manage";
+import Note_Manage from "./Pages/Note_Manage";
+import Material from "./Pages/Material";
+import Add_Material from "./Pages/Add_Material";
+import Leave_Manage from "./Pages/Leave_Manage";
+import Add_Leave from "./Pages/Add_Leave";
+import Logout from "./Pages/Logout";
 
 const App = () => {
   
