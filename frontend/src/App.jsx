@@ -18,6 +18,7 @@ import Add_Material from "./Pages/Add_Material";
 import Leave_Manage from "./Pages/Leave_Manage";
 import Add_Leave from "./Pages/Add_Leave";
 import Logout from "./Pages/Logout";
+import NotFoundPage from "./Components/PageNotFound";
 
 const App = () => {
   
@@ -43,6 +44,8 @@ const App = () => {
         <Route path="/add_material" element={ <MasterPage><Add_Material /></MasterPage> }/>
         <Route path="/add_leave" element={ <MasterPage><Add_Leave /></MasterPage> }/>
         <Route path="/leave_manage" element={ <MasterPage><Leave_Manage /></MasterPage> }/>
+
+        <Route path="/page" element={ <NotFoundPage /> } />
       </Routes>
     </Router>
   );

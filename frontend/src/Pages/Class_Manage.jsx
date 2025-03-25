@@ -1,39 +1,109 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
+import axios from "axios";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import Submit_Button from "../Components/Submit_Button";
+
+const API_URL = "http://localhost:8081";
 
 const Class = () => {
-  const navigate = useNavigate();
+  const [classes, setClasses] = useState([]);
+  const [editId, setEditId] = useState(null);
+  const [showModal, setShowModal] = useState(false); // 🔹 Modal state
 
-  const validationSchema = Yup.object({
-    className: Yup.string().required("Please Enter Class name"),
-  });
+  // ✅ Fetch All Classes
+  const fetchClasses = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/get_classes`);
+      setClasses(response.data);
+    } catch (error) {
+      console.error("Error fetching classes:", error);
+    }
+  };
 
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
+  // ✅ Formik for Add/Edit Class
   const formik = useFormik({
-    initialValues: {
-      className: "",
+    initialValues: { className: "" },
+    validationSchema: Yup.object({
+      className: Yup.string().required("Class Name Is Required"),
+    }),
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        if (editId) {
+          // 🔹 Update Class API Call
+          await axios.put(`${API_URL}/update_class/${editId}`, values);
+          Swal.fire({
+            title: "Updated!",
+            text: "Class updated successfully",
+            icon: "success",
+            timer: 1000, 
+            showConfirmButton: false, 
+            timerProgressBar: true,
+          });
+          setEditId(null);
+        } else {
+          // 🔹 Add Class API Call
+          await axios.post(`${API_URL}/add_class`, values);
+          Swal.fire({
+            title: "Success!",
+            text: "Class added successfully",
+            icon: "success",
+            timer: 1000,
+            showConfirmButton: false, 
+            timerProgressBar: true,
+          });
+        }
+        resetForm();
+        fetchClasses();
+        setShowModal(false); // 🔹 Close modal after update
+      } catch (error) {
+        console.error("Error saving class:", error);
+        Swal.fire("Error!", "Failed to save class", "error");
+      }
     },
-    validationSchema,
-    onSubmit: () => {
-        Swal.fire({
-          title: "Success!",
-          text: "New class successfully added",
-          icon: "success",
-          timer: 1000,
-          showConfirmButton: true,
-          timerProgressBar: true,
-        }).then(() => {
-          formik.resetForm();  // Reset form fields after submission
-          navigate("/class_manage");
-        });
-      },
   });
+
+  // ✅ Delete Class
+  const deleteClass = async (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to undo this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`${API_URL}/delete_class/${id}`);
+          fetchClasses();
+          Swal.fire({
+            title: "Deleted!",
+            text: "Class has been deleted.",
+            icon: "success",
+            timer: 1000, 
+            showConfirmButton: false, 
+            timerProgressBar: true,
+          });
+        } catch (error) {
+          console.error("Error deleting class:", error);
+          Swal.fire("Error!", "Failed to delete class", "error");
+        }
+      }
+    });
+  };
 
   return (
     <div className="p-6 flex flex-row max-w-full justify-between gap-6">
-      <div className="bg-white shadow-md rounded-lg p-6 w-1/2">
+      {/* ✅ Left Side: Add/Edit Class Form */}
+      <div className="bg-white shadow-md rounded-lg p-6 w-1/2 h-60">
         <h2 className="text-xl font-bold mb-4">Add Class</h2>
         <form onSubmit={formik.handleSubmit} className="space-y-4">
           <div>
@@ -45,20 +115,17 @@ const Class = () => {
               {...formik.getFieldProps("className")}
             />
             {formik.touched.className && formik.errors.className && (
-              <span className="text-red-500 text-sm">
-                {formik.errors.className}
-              </span>
+              <span className="text-red-500 text-sm">{formik.errors.className}</span>
             )}
           </div>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
+          {/* <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             Add Class
-          </button>
+          </button> */}
+          < Submit_Button buttonType="submit" buttonName="Add Class" />
         </form>
       </div>
 
+      {/* ✅ Right Side: Class List Table */}
       <div className="bg-white shadow-md rounded-lg p-6 w-1/2">
         <h2 className="text-xl font-bold mb-4">Class List</h2>
         <div className="overflow-x-auto">
@@ -71,26 +138,72 @@ const Class = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="px-4 py-2 text-center">1</td>
-                <td className="px-4 py-2 text-center">Class 1</td>
-                <td className="px-4 py-2 space-x-4 text-center">
-                  <Link>
-                    <button className="text-blue-600 hover:text-blue-800">
+              {classes.map((cls, index) => (
+                <tr key={cls.class_id} className="border-t border-gray-300">
+                  <td className="px-4 py-2 text-center">{index + 1}</td>
+                  <td className="px-4 py-2 text-center">{cls.class_name}</td>
+                  <td className="px-4 py-2 space-x-2 text-center">
+                    <button
+                      className="text-blue-600 hover:text-blue-800"
+                      onClick={() => {
+                        setEditId(cls.class_id);
+                        formik.setValues({ className: cls.class_name });
+                        setShowModal(true);
+                      }}
+                    >
                       <FaEdit />
                     </button>
-                  </Link>
-                  <Link>
-                    <button className="text-red-600 hover:text-red-800">
+                    <button
+                      className="text-red-600 hover:text-red-800"
+                      onClick={() => deleteClass(cls.class_id)}
+                    >
                       <FaTrash />
                     </button>
-                  </Link>
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* ✅ Modal for Editing */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm">
+          <div className="bg-white p-6 rounded shadow-lg w-110">
+            <h2 className="text-xl font-bold mb-4">Update Class</h2>
+            <form onSubmit={formik.handleSubmit}>
+              <div>
+                <label className="block text-sm font-medium">Class Name</label>
+                <input
+                  type="text"
+                  name="className"
+                  className="mt-1 p-2 border rounded w-full focus:outline-sky-500"
+                  {...formik.getFieldProps("className")}
+                />
+                {formik.touched.className && formik.errors.className && (
+                  <span className="text-red-500 text-sm">{formik.errors.className}</span>
+                )}
+              </div>
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  type="button"
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

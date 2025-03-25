@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-export const Submit_Button = ({buttonType,buttonName}) => {
+const Submit_Button = ({buttonType,buttonName}) => {
     return (
         <>
             <button
@@ -11,8 +11,8 @@ export const Submit_Button = ({buttonType,buttonName}) => {
         </>
     );
 }
-
 Submit_Button.propTypes = {
     buttonType: PropTypes.string.isRequired,
     buttonName: PropTypes.string.isRequired,
 };
+export default Submit_Button;

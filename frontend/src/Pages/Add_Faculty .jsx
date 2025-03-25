@@ -2,7 +2,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { Submit_Button } from "../Components/Submit_Button";
+import Submit_Button from "../Components/Submit_Button";
 const Add_Faculty = () => {
   const navigate = useNavigate();
 
