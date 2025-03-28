@@ -118,9 +118,6 @@ const Class = () => {
               <span className="text-red-500 text-sm">{formik.errors.className}</span>
             )}
           </div>
-          {/* <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Add Class
-          </button> */}
           < Submit_Button buttonType="submit" buttonName="Add Class" />
         </form>
       </div>
