@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const multer = require("multer");
 const path = require("path");
-
+const fs = require("fs");
 const app = express();
 app.use(cors());
 app.use(express.json()); // ✅ To parse JSON data
@@ -36,6 +36,7 @@ const student_storage = multer.diskStorage({
     );
   },
 });
+
 const faculty_storage = multer.diskStorage({
   destination: path.join(__dirname, "../frontend/public/FacultyImage"),
   filename: (req, file, cb) => {
@@ -47,10 +48,23 @@ const faculty_storage = multer.diskStorage({
     );
   },
 });
+
+const update_faculty_storage = multer.diskStorage({
+  destination: path.join(__dirname, "../frontend/public/FacultyImage"),
+  filename: function (req, file, cb) {
+    const { firstname, lastname } = req.body;
+    const fileExt = path.extname(file.originalname);
+    const filename = `${firstname}_${lastname}${fileExt}`;
+    const uniqueSuffix = Date.now();
+    cb(null, filename + "_" + uniqueSuffix);
+  },
+});
+
+
 const student_upload = multer({ storage: student_storage });
 const faculty_upload = multer({ storage: faculty_storage });
-
-
+const update_student = multer({ storage: multer.memoryStorage() });
+const update_faculty = multer({ storage: update_faculty_storage });
 
 // ✅ Get all classes
 app.get("/get_classes", (req, res) => {
@@ -327,6 +341,134 @@ app.post("/add-student", student_upload.single("image"), async (req, res) => {
   }
 });
 
+app.get("/students", (req, res) => {
+  db.query("SELECT * FROM student_master", (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.json(results);
+  });
+});
+app.put("/update-student/:id", update_student.single("image"), (req, res) => {
+  const studentId = req.params.id;
+  const { firstname, lastname, email, pnumber, dob, gender } = req.body;
+
+  console.log("Request Body:", req.body);
+  console.log("Uploaded File:", req.file);
+
+  if (!firstname || !lastname || !email || !pnumber || !dob || !gender) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  let finalImage = null;
+
+  if (req.file) {
+    const uploadPath = path.join(__dirname, "../frontend/public/StudentImage");
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    const uniqueSuffix = Date.now();
+    const fileExtension = path.extname(req.file.originalname);
+    const filename = `${firstname}_${lastname}_${uniqueSuffix}${fileExtension}`;
+    const filePath = path.join(uploadPath, filename);
+
+    fs.writeFileSync(filePath, req.file.buffer);
+    finalImage = filename;
+  }
+
+  const selectQuery = `SELECT image FROM student_master WHERE sid = ?`;
+  db.query(selectQuery, [studentId], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res
+        .status(500)
+        .json({ message: "Error fetching student record." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+
+    const existingImage = results[0].image;
+    finalImage = finalImage || existingImage; // Keep old image if new not provided
+
+    const updateQuery = `
+      UPDATE student_master
+      SET firstname = ?, lastname = ?, email = ?, pnumber = ?, dob = ?, gender = ?, image = ?
+      WHERE sid = ?
+    `;
+
+    db.query(
+      updateQuery,
+      [firstname, lastname, email, pnumber, dob, gender, finalImage, studentId],
+      (updateErr, result) => {
+        if (updateErr) {
+          console.error("Database error:", updateErr);
+          return res
+            .status(500)
+            .json({ message: "Error updating student record." });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Student not found." });
+        }
+
+        res.status(200).json({
+          message: "Student updated successfully.",
+          image: finalImage,
+        });
+      }
+    );
+  });
+});
+app.delete("/delete-student/:id", (req, res) => {
+  const { id } = req.params;
+
+  console.log("🗑️ Received Delete Request for Student ID:", id);
+
+  // Step 1: Get the UID from student_master before deleting
+  const getUidQuery = "SELECT uid FROM student_master WHERE sid = ?";
+  db.query(getUidQuery, [id], (err, results) => {
+    if (err) {
+      console.error("❌ Error Student faculty UID:", err);
+      return res.status(500).json({ error: "Error retrieving Student data" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    const uid = results[0].uid; // Extract UID from the faculty record
+
+    console.log("🔎 Found UID:", uid);
+
+    // Step 2: Delete faculty from Student_master
+    const deleteFacultyQuery = "DELETE FROM student_master WHERE sid = ?";
+    db.query(deleteFacultyQuery, [id], (err, facultyResult) => {
+      if (err) {
+        console.error("❌ Error deleting faculty:", err);
+        return res.status(500).json({ error: "Error deleting faculty" });
+      }
+
+      console.log("✅ Student deleted successfully");
+
+      // Step 3: Delete user from users table (if UID exists)
+      if (uid) {
+        const deleteUserQuery = "DELETE FROM users WHERE uid = ?";
+        db.query(deleteUserQuery, [uid], (err, userResult) => {
+          if (err) {
+            console.error("❌ Error deleting user:", err);
+            return res.status(500).json({ error: "Error deleting associated user" });
+          }
+
+          console.log("✅ User deleted successfully");
+          res.status(200).json({ message: "Faculty and associated user deleted successfully" });
+        });
+      } else {
+        res.status(200).json({ message: "Faculty deleted, but no associated user found" });
+      }
+    });
+  });
+});
 // ✅ Add New Faculty
 app.post("/add-faculty", faculty_upload.single("image"), async (req, res) => {
   try {
@@ -343,7 +485,16 @@ app.post("/add-faculty", faculty_upload.single("image"), async (req, res) => {
     } = req.body;
     const image = req.file?.filename || null;
 
-    if (!firstName || !lastName || !email || !phoneNo || !dob || !address || !gender || !subjects) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phoneNo ||
+      !dob ||
+      !address ||
+      !gender ||
+      !subjects
+    ) {
       return res.status(400).json({ message: "All fields are required!" });
     }
     if (!image) return res.status(400).json({ message: "Image upload failed" });
@@ -356,60 +507,81 @@ app.post("/add-faculty", faculty_upload.single("image"), async (req, res) => {
     const fullName = `${firstName} ${lastName}`;
 
     // ✅ Check if Email Already Exists
-    db.query("SELECT COUNT(*) AS count FROM users WHERE username = ?", [userName], (err, result) => {
-      if (err) {
-        console.error("❌ Database error while checking email:", err.message);
-        return res.status(500).json({ error: "Database error while checking email" });
-      }
-
-      if (result[0].count > 0) {
-        return res.status(400).json({ message: "Email already exists. Please use a different email." });
-      }
-
-      // ✅ Insert into `users`
-      const user_sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-      db.query(user_sql, [userName, hash_password, role], (err, userResult) => {
+    db.query(
+      "SELECT COUNT(*) AS count FROM users WHERE username = ?",
+      [userName],
+      (err, result) => {
         if (err) {
-          console.error("❌ Error inserting into users table:", err.message);
-          return res.status(500).json({ error: "Error inserting into users table" });
+          console.error("❌ Database error while checking email:", err.message);
+          return res
+            .status(500)
+            .json({ error: "Database error while checking email" });
         }
 
-        const user_id = userResult.insertId;
-        console.log("✅ User ID:", user_id);
+        if (result[0].count > 0) {
+          return res.status(400).json({
+            message: "Email already exists. Please use a different email.",
+          });
+        }
 
-        // ✅ Insert into `faculty_master`
-        const faculty_sql = `INSERT INTO faculty_master 
+        // ✅ Insert into `users`
+        const user_sql =
+          "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        db.query(
+          user_sql,
+          [userName, hash_password, role],
+          (err, userResult) => {
+            if (err) {
+              console.error(
+                "❌ Error inserting into users table:",
+                err.message
+              );
+              return res
+                .status(500)
+                .json({ error: "Error inserting into users table" });
+            }
+
+            const user_id = userResult.insertId;
+            console.log("✅ User ID:", user_id);
+
+            // ✅ Insert into `faculty_master`
+            const faculty_sql = `INSERT INTO faculty_master 
           (uid, firstname, lastname, email, pnumber, emrnumber, dob, gender, address, subjectid, image) 
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        const faculty_values = [
-          user_id,
-          firstName,
-          lastName,
-          email,
-          phoneNo,
-          ephoneNo,
-          dob,
-          gender,
-          address,
-          subjects, // Assuming subjects are stored as an array or comma-separated values
-          image,
-        ];
+            const faculty_values = [
+              user_id,
+              firstName,
+              lastName,
+              email,
+              phoneNo,
+              ephoneNo,
+              dob,
+              gender,
+              address,
+              subjects, // Assuming subjects are stored as an array or comma-separated values
+              image,
+            ];
 
-        db.query(faculty_sql, faculty_values, (err, facultyResult) => {
-          if (err) {
-            console.error("❌ Faculty Insert Error:", err.message);
-            return res.status(500).json({ message: "Database error", error: err.message });
-          }
+            db.query(faculty_sql, faculty_values, (err, facultyResult) => {
+              if (err) {
+                console.error("❌ Faculty Insert Error:", err.message);
+                return res
+                  .status(500)
+                  .json({ message: "Database error", error: err.message });
+              }
 
-          console.log("✅ Faculty Inserted Successfully:", facultyResult.insertId);
+              console.log(
+                "✅ Faculty Inserted Successfully:",
+                facultyResult.insertId
+              );
 
-          // ✅ Send Welcome Email to Faculty
-          const mailOptions = {
-            from: '"Edusphere Team" <support@edusphere.com>',
-            to: email,
-            subject: `🎓 Welcome to Edusphere, Professor ${fullName}!`,
-            html: `
+              // ✅ Send Welcome Email to Faculty
+              const mailOptions = {
+                from: '"Edusphere Team" <support@edusphere.com>',
+                to: email,
+                subject: `🎓 Welcome to Edusphere, Professor ${fullName}!`,
+                html: `
               <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; padding: 40px; background: linear-gradient(to bottom, #2c3e50, #1c2833); color: #fff; border-radius: 10px; text-align: center;">
                 
                 <h1 style="margin-bottom: 10px; font-size: 28px;">🚀 Welcome to <span style="color: #f39c12;">Edusphere</span>!</h1>
@@ -450,26 +622,195 @@ app.post("/add-faculty", faculty_upload.single("image"), async (req, res) => {
                 </div>
               </div>
             `,
-          };
+              };
 
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) return res.status(500).json({ error: "Email sending failed" });
+              transporter.sendMail(mailOptions, (error, info) => {
+                if (error)
+                  return res
+                    .status(500)
+                    .json({ error: "Email sending failed" });
 
-            console.log("📧 Faculty Email Sent:", info.response);
+                console.log("📧 Faculty Email Sent:", info.response);
 
-            res.status(201).json({
-              message: "Faculty added successfully",
-              user_id: user_id,
-              faculty_id: facultyResult.insertId,
+                res.status(201).json({
+                  message: "Faculty added successfully",
+                  user_id: user_id,
+                  faculty_id: facultyResult.insertId,
+                });
+              });
             });
-          });
-        });
-      });
-    });
+          }
+        );
+      }
+    );
   } catch (error) {
     console.error("❌ Server Error:", error);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+// Fetch all faculty members
+app.get("/faculty", (req, res) => {
+  const query = `
+    SELECT f.*, 
+           IFNULL(GROUP_CONCAT(DISTINCT s.subject_name ORDER BY s.subject_name SEPARATOR ', '), 'No Subject') AS subjects
+    FROM faculty_master f
+    LEFT JOIN subject_master s ON FIND_IN_SET(s.subject_id, f.subjectid) > 0
+    GROUP BY f.fid;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Database Error:", err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+app.put(
+  "/update-faculty/:id",
+  update_faculty.single("image"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      let {
+        firstname,
+        lastname,
+        email,
+        pnumber,
+        dob,
+        gender,
+        address,
+        subject_id,
+      } = req.body;
+      const image = req.file ? req.file.filename : null;
+
+      console.log("🔄 Received Update Request for Faculty ID:", id);
+      console.log(
+        "📌 Received subject_id:",
+        subject_id,
+        "Type:",
+        typeof subject_id
+      );
+      console.log("🔎 Request Body:", req.body);
+
+      // Convert ISO date to 'YYYY-MM-DD'
+      const formattedDob = dob
+        ? new Date(dob).toISOString().split("T")[0]
+        : null;
+
+      // Retrieve existing faculty details
+      const getQuery = "SELECT * FROM faculty_master WHERE fid = ?";
+      db.query(getQuery, [id], (err, results) => {
+        if (err) {
+          console.error("❌ Error fetching faculty:", err);
+          return res
+            .status(500)
+            .json({ error: "Error fetching existing data" });
+        }
+
+        if (results.length === 0) {
+          return res.status(404).json({ error: "Faculty not found" });
+        }
+
+        const existingData = results[0];
+
+        const newsubjectid = Array.isArray(subject_id) ? subject_id.join(",") : String(subject_id);
+
+        console.log(newsubjectid); // Output: "2,3"
+        console.log(typeof newsubjectid);
+        // ✅ Fix: Ensure subject_id is parsed correctly from JSON
+
+        const updateQuery = `
+      UPDATE faculty_master 
+      SET firstname=?, lastname=?, email=?, pnumber=?, dob=?, gender=?, address=?, subjectid=?, image=? 
+      WHERE fid=?
+    `;
+
+        const values = [
+          firstname || existingData.firstname,
+          lastname || existingData.lastname,
+          email || existingData.email,
+          pnumber || existingData.pnumber,
+          formattedDob || existingData.dob,
+          gender || existingData.gender,
+          address || existingData.address,
+          newsubjectid, // ✅ Ensured Not NULL
+          image || existingData.image,
+          id,
+        ];
+
+        console.log("🟢 Executing SQL Query:", updateQuery);
+        console.log("📊 Query Values:", values);
+
+        db.query(updateQuery, values, (err, result) => {
+          if (err) {
+            console.error("❌ Database update error:", err);
+            return res.status(500).json({ error: "Database update failed" });
+          }
+          if (result.affectedRows === 0) {
+            return res
+              .status(400)
+              .json({ error: "No rows updated. Possible invalid faculty ID." });
+          }
+          res.status(200).json({ message: "✅ Faculty updated successfully" });
+        });
+      });
+    } catch (error) {
+      console.error("❌ Update error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+app.delete("/delete-faculty/:id", (req, res) => {
+  const { id } = req.params;
+
+  console.log("🗑️ Received Delete Request for Faculty ID:", id);
+
+  // Step 1: Get the UID from faculty_master before deleting
+  const getUidQuery = "SELECT uid FROM faculty_master WHERE fid = ?";
+  db.query(getUidQuery, [id], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching faculty UID:", err);
+      return res.status(500).json({ error: "Error retrieving faculty data" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Faculty not found" });
+    }
+
+    const uid = results[0].uid; // Extract UID from the faculty record
+
+    console.log("🔎 Found UID:", uid);
+
+    // Step 2: Delete faculty from faculty_master
+    const deleteFacultyQuery = "DELETE FROM faculty_master WHERE fid = ?";
+    db.query(deleteFacultyQuery, [id], (err, facultyResult) => {
+      if (err) {
+        console.error("❌ Error deleting faculty:", err);
+        return res.status(500).json({ error: "Error deleting faculty" });
+      }
+
+      console.log("✅ Faculty deleted successfully");
+
+      // Step 3: Delete user from users table (if UID exists)
+      if (uid) {
+        const deleteUserQuery = "DELETE FROM users WHERE uid = ?";
+        db.query(deleteUserQuery, [uid], (err, userResult) => {
+          if (err) {
+            console.error("❌ Error deleting user:", err);
+            return res.status(500).json({ error: "Error deleting associated user" });
+          }
+
+          console.log("✅ User deleted successfully");
+          res.status(200).json({ message: "Faculty and associated user deleted successfully" });
+        });
+      } else {
+        res.status(200).json({ message: "Faculty deleted, but no associated user found" });
+      }
+    });
+  });
 });
 app.listen(8081, () => {
   console.log("Server is running on port 8081");
