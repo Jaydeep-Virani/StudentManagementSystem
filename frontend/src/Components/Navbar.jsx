@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaUser, FaCog, FaSignOutAlt, FaKey, FaLock } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaKey, FaLock } from "react-icons/fa";
 import { IoMdArrowDropdown} from "react-icons/io";
 import Swal from "sweetalert2";
 
@@ -64,10 +64,10 @@ export const  Navbar = () =>{
                         <FaLock className="w-4 h-4" />
                         <button onClick={handleLockScreen}>Lock Screen</button>
                         </li>
-                        <li className="px-4 py-2 flex items-center gap-2 hover:font-bold border-b border-gray-300 hover:scale-102">
+                        {/* <li className="px-4 py-2 flex items-center gap-2 hover:font-bold border-b border-gray-300 hover:scale-102">
                         <FaCog className="w-4 h-4" />
                         <Link to="/settings">Settings</Link>
-                        </li>
+                        </li> */}
                         <li className="px-4 py-2 flex items-center gap-2 hover:font-bold hover:scale-102">
                         <FaSignOutAlt className="w-4 h-4" />
                         <Link to="/logout">Logout</Link>

@@ -392,13 +392,13 @@ const FacultyManage = () => {
                   </option>
                 ))}
               </select>
-              ;{/* Image Upload */}
+              {/* Image Upload */}
               <div className="mb-2">
                 {imagePreview && (
                   <img
                     src={imagePreview}
                     alt="Profile Preview"
-                    className="w-24 h-24 object-cover rounded-full mb-2"
+                    className="w-15 h-15 object-cover rounded-full mb-2"
                   />
                 )}
                 <input

@@ -2,14 +2,15 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import Submit_Button from "../Components/Submit_Button";
 
 const Add_Holiday = () => {
   const navigate = useNavigate();
 
   // Yup validation schema
   const validationSchema = Yup.object({
-    holidayName: Yup.string().required("Please enter Holiday name"),
-    date: Yup.string().required("Please enter Date"),
+    holidayName: Yup.string().required("Please Enter Holiday Name"),
+    date: Yup.string().required("Please Enter Date"),
   });
 
   // Formik form handling
@@ -19,20 +20,46 @@ const Add_Holiday = () => {
       date: "",
     },
     validationSchema,
-    onSubmit: () => {
-      Swal.fire({
-        title: "Success!",
-        text: "Add New Holiday Successfully",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: true,
-        timerProgressBar: true,
-      });
+    onSubmit: (values) => {
+      const dateObj = new Date(values.date);
+      const month = dateObj.getMonth() + 1; // JS months are 0-based
+      const dayIndex = dateObj.getDay();
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const day = days[dayIndex];
 
-      setTimeout(() => {
-        navigate("/holiday");
-      }, 2000);
-    },
+    
+      const payload = {
+        holidayName: values.holidayName,
+        date: values.date,
+        month,
+        day,
+      };
+    
+      fetch("http://localhost:8081/add-holiday", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            Swal.fire({
+              title: "Success!",
+              text: "Add New Holiday Successfully",
+              icon: "success",
+              timer: 1000,
+              showConfirmButton: true,
+              timerProgressBar: true,
+            });
+    
+            setTimeout(() => {
+              navigate("/holiday");
+            }, 2000);
+          } else {
+            Swal.fire("Error", data.message || "Failed to add holiday", "error");
+          }
+        });
+    },    
   });
 
   return (
@@ -73,12 +100,7 @@ const Add_Holiday = () => {
 
             {/* Submit Button */}
             <div className="mb-4">
-              <button
-                type="submit"
-                className=" bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Add Holiday
-              </button>
+              <Submit_Button buttonType="submit" buttonName="+ Add Holiday" />
             </div>
           </form>
         </div>

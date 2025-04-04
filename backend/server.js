@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // ✅ To parse JSON data
 
+// Database Connection
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -17,6 +18,7 @@ const db = mysql.createConnection({
   database: "edusphere",
 });
 
+// Mail Send Configration
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -36,7 +38,6 @@ const student_storage = multer.diskStorage({
     );
   },
 });
-
 const faculty_storage = multer.diskStorage({
   destination: path.join(__dirname, "../frontend/public/FacultyImage"),
   filename: (req, file, cb) => {
@@ -48,7 +49,6 @@ const faculty_storage = multer.diskStorage({
     );
   },
 });
-
 const update_faculty_storage = multer.diskStorage({
   destination: path.join(__dirname, "../frontend/public/FacultyImage"),
   filename: function (req, file, cb) {
@@ -60,13 +60,12 @@ const update_faculty_storage = multer.diskStorage({
   },
 });
 
-
 const student_upload = multer({ storage: student_storage });
 const faculty_upload = multer({ storage: faculty_storage });
 const update_student = multer({ storage: multer.memoryStorage() });
 const update_faculty = multer({ storage: update_faculty_storage });
 
-// ✅ Get all classes
+// Get all classes
 app.get("/get_classes", (req, res) => {
   const sql = "SELECT * FROM class_master";
   db.query(sql, (err, result) => {
@@ -74,8 +73,7 @@ app.get("/get_classes", (req, res) => {
     return res.json(result);
   });
 });
-
-// ✅ Add a new class
+// Add a new class
 app.post("/add_class", (req, res) => {
   const { className } = req.body;
   const sql = "INSERT INTO class_master (class_name) VALUES (?)";
@@ -84,8 +82,7 @@ app.post("/add_class", (req, res) => {
     return res.json({ message: "Class added successfully" });
   });
 });
-
-// ✅ Update a class
+// Update a class
 app.put("/update_class/:id", (req, res) => {
   const { className } = req.body; // ✅ Ensure correct variable name
   const { id } = req.params;
@@ -102,8 +99,7 @@ app.put("/update_class/:id", (req, res) => {
     return res.json({ message: "Class updated successfully" });
   });
 });
-
-// ✅ Delete a class
+// Delete a class
 app.delete("/delete_class/:id", (req, res) => {
   const { id } = req.params;
 
@@ -126,6 +122,7 @@ app.delete("/delete_class/:id", (req, res) => {
   });
 });
 
+// Fetch All Subject 
 app.get("/get_subjects", (req, res) => {
   const sql = "SELECT * FROM subject_master";
   db.query(sql, (err, result) => {
@@ -133,8 +130,7 @@ app.get("/get_subjects", (req, res) => {
     return res.json(result);
   });
 });
-
-// ✅ Add a new subject
+// Add a new subject
 app.post("/add_subject", (req, res) => {
   const { subjectName } = req.body;
   const sql = "INSERT INTO subject_master (subject_name) VALUES (?)";
@@ -143,8 +139,7 @@ app.post("/add_subject", (req, res) => {
     return res.json({ message: "Subject added successfully" });
   });
 });
-
-// ✅ Update a subject
+// Update a subject
 app.put("/update_subject/:id", (req, res) => {
   const { subjectName } = req.body;
   const { id } = req.params;
@@ -161,8 +156,7 @@ app.put("/update_subject/:id", (req, res) => {
     return res.json({ message: "Subject updated successfully" });
   });
 });
-
-// ✅ Delete a subject
+// Delete a subject
 app.delete("/delete_subject/:id", (req, res) => {
   const { id } = req.params;
 
@@ -340,13 +334,14 @@ app.post("/add-student", student_upload.single("image"), async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
+// Fetch Student
 app.get("/students", (req, res) => {
   db.query("SELECT * FROM student_master", (err, results) => {
     if (err) return res.status(500).send(err);
     res.json(results);
   });
 });
+// Update Student 
 app.put("/update-student/:id", update_student.single("image"), (req, res) => {
   const studentId = req.params.id;
   const { firstname, lastname, email, pnumber, dob, gender } = req.body;
@@ -420,6 +415,7 @@ app.put("/update-student/:id", update_student.single("image"), (req, res) => {
     );
   });
 });
+// Delete Student 
 app.delete("/delete-student/:id", (req, res) => {
   const { id } = req.params;
 
@@ -469,7 +465,8 @@ app.delete("/delete-student/:id", (req, res) => {
     });
   });
 });
-// ✅ Add New Faculty
+
+//  Add New Faculty
 app.post("/add-faculty", faculty_upload.single("image"), async (req, res) => {
   try {
     const {
@@ -648,7 +645,6 @@ app.post("/add-faculty", faculty_upload.single("image"), async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 // Fetch all faculty members
 app.get("/faculty", (req, res) => {
   const query = `
@@ -667,7 +663,7 @@ app.get("/faculty", (req, res) => {
     res.json(results);
   });
 });
-
+// Update faculty details
 app.put(
   "/update-faculty/:id",
   update_faculty.single("image"),
@@ -763,6 +759,7 @@ app.put(
     }
   }
 );
+// Delete faculty member
 app.delete("/delete-faculty/:id", (req, res) => {
   const { id } = req.params;
 
@@ -812,6 +809,140 @@ app.delete("/delete-faculty/:id", (req, res) => {
     });
   });
 });
+
+// Add New Holiday
+app.post("/add-holiday", async (req, res) => {
+  const { holidayName, date, month, day } = req.body;
+
+  console.log("HolidayName : "+holidayName);
+  console.log("HolidayDate : "+date);
+  console.log("HolidayMonth : "+month);
+  console.log("HolidayDay : "+day);
+  try {
+    const { holidayName, date, month, day } = req.body;
+
+    db.query(
+      "INSERT INTO holiday_master (holiday_name, holiday_date, holiday_day, month_id) VALUES (?, ?, ?, ?)",
+      [holidayName, date, day, month]
+    );
+    return res.json({ success: true });
+  
+  } catch (error) {
+    console.error("Error adding holiday:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+  
+});
+// Get Month 
+app.get("/get-months", (req, res) => {
+  const sql = "SELECT * FROM month";
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json(err);
+    return res.json(result);
+  });
+});
+// Get Holiday 
+app.get('/get-holidays', (req, res) => {
+  const monthName = req.query.monthname;
+
+  // Step 1: Find the month_id from month_master
+  const findMonthIdQuery = `
+    SELECT mid FROM month WHERE monthname = ?
+  `;
+
+  db.query(findMonthIdQuery, [monthName], (err, monthResults) => {
+    if (err) {
+      console.error("Error fetching month ID:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (monthResults.length === 0) {
+      return res.status(404).json({ error: "Month not found" });
+    }
+    const monthId = monthResults[0].mid;
+
+    const getHolidaysQuery = `
+      SELECT hid, holiday_name, DATE_FORMAT(holiday_date, '%d-%m-%Y') AS holiday_date, holiday_day, month_id 
+      FROM holiday_master
+      WHERE month_id = ?
+    `;
+
+    db.query(getHolidaysQuery, [monthId], (err, holidayResults) => {
+      if (err) {
+        console.error("Error fetching holidays:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      res.json(holidayResults);
+    });
+  });
+});
+// Update Holiday 
+app.put("/update-holiday/:id", (req, res) => {
+  const { id } = req.params;
+  const { holiday_name, holiday_date } = req.body;
+
+  // Convert from 'DD-MM-YYYY' to 'YYYY-MM-DD'
+  const dateParts = holiday_date.split("-");
+  const dateObj = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+
+  if (isNaN(dateObj.getTime())) {
+    return res.status(400).json({ error: "Invalid date format" });
+  }
+
+  const formattedDate = dateObj.toISOString().split("T")[0]; // 'YYYY-MM-DD'
+  const monthName = dateObj.toLocaleString("default", { month: "long" });
+  const dayName = dateObj.toLocaleString("default", { weekday: "long" });
+
+  console.log("Holiday ID:", id);
+  console.log("Holiday Name:", holiday_name);
+  console.log("Original Date (DD-MM-YYYY):", holiday_date);
+  console.log("Formatted Date (YYYY-MM-DD):", formattedDate);
+  console.log("Month Name:", monthName);
+  console.log("Day Name:", dayName);
+
+  // Step 1: Get month_id from month table
+  const getMonthIdQuery = "SELECT mid FROM month WHERE monthname = ?";
+  db.query(getMonthIdQuery, [monthName], (err, results) => {
+    if (err) {
+      console.error("Error getting month_id:", err);
+      return res.status(500).json({ error: "DB error while getting month_id" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Month not found" });
+    }
+
+    const month_id = results[0].mid;
+
+    // Step 2: Update holiday_master
+    const updateQuery = `
+      UPDATE holiday_master 
+      SET holiday_name = ?, holiday_date = ?, holiday_day = ?, month_id = ? 
+      WHERE hid = ?
+    `;
+
+    db.query(updateQuery, [holiday_name, formattedDate, dayName, month_id, id], (err, result) => {
+      if (err) {
+        console.error("Error updating holiday:", err);
+        return res.status(500).json({ error: "DB error while updating holiday" });
+      }
+
+      res.json({ success: true, message: "Holiday updated successfully" });
+    });
+  });
+});
+// Delete Holiday 
+app.delete("/delete-holiday/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "DELETE FROM holiday_master WHERE hid = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.json({ success: false, error: err });
+    return res.json({ success: true });
+  });
+});
+
+// Start the server
 app.listen(8081, () => {
   console.log("Server is running on port 8081");
 });

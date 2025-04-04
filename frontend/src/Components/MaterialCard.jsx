@@ -1,12 +1,10 @@
 import { FiDownload } from "react-icons/fi"; 
-
 const materials = [
     { id: 1, name: "Material 1", file: "pdf.svg" },
     { id: 2, name: "Material 2", file: "pdf.svg" },
     { id: 3, name: "Material 3", file: "pdf.svg" },
     { id: 4, name: "Material 4", file: "pdf.svg" },
 ];
-
 export const Material_Card = () => {
     return (
     <>
