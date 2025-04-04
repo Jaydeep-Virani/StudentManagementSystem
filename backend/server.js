@@ -942,6 +942,69 @@ app.delete("/delete-holiday/:id", (req, res) => {
   });
 });
 
+// Add new note
+app.post("/add-note", (req, res) => {
+  const { note_content } = req.body;
+  const sql = "INSERT INTO notes_master (notes) VALUES (?)";
+  db.query(sql, [note_content], (err, result) => {
+    if (err) return res.json({ success: false, error: err });
+    return res.json({ success: true, message: "Note added" });
+  });
+});
+// Get all notes
+app.get("/get-notes", (req, res) => {
+  const sql = "SELECT * FROM notes_master ORDER BY nid DESC";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching notes:", err);
+      return res.status(500).json({ success: false, error: err });
+    }
+    return res.json(results);
+  });
+});
+
+app.put("/update-note/:id", (req, res) => {
+  const noteId = req.params.id;
+  const { note_content } = req.body;
+
+  console.log("Note ID:", noteId);
+  console.log("Body Content:", note_content);
+  if (!noteId) {
+    return res.status(400).json({ success: false, message: "Missing note ID" });
+  }
+
+  const sql = "UPDATE notes_master SET notes = ? WHERE nid = ?";
+  db.query(sql, [note_content, noteId], (err, result) => {
+    if (err) {
+      return res.json({ success: false, error: err });
+    }
+    res.json({ success: true });
+  });
+});
+
+
+// DELETE a note 
+app.delete("/delete-note/:id", (req, res) => {
+  const noteId = req.params.id;
+
+  if (!noteId) {
+    return res.status(400).json({ success: false, message: "Note ID is required" });
+  }
+
+  const sql = "DELETE FROM notes_master WHERE nid = ?";
+  db.query(sql, [noteId], (err, result) => {
+    if (err) {
+      console.error("Error deleting note:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Note not found" });
+    }
+
+    res.json({ success: true, message: "Note deleted successfully" });
+  });
+});
 // Start the server
 app.listen(8081, () => {
   console.log("Server is running on port 8081");

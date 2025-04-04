@@ -97,7 +97,6 @@ const Add_Holiday = () => {
                 <span className="text-red-500 text-sm">{formik.errors.date}</span>
               )}
             </div>
-
             {/* Submit Button */}
             <div className="mb-4">
               <Submit_Button buttonType="submit" buttonName="+ Add Holiday" />

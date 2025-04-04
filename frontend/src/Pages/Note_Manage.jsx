@@ -1,39 +1,143 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import Submit_Button from "../Components/Submit_Button";
 
 const ManageNote = () => {
-  const navigate = useNavigate();
+  const [notes, setNotes] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentNote, setCurrentNote] = useState({ id: null, content: "" });
 
+  // Fetch notes from backend
+  const fetchNotes = () => {
+    fetch("http://localhost:8081/get-notes")
+      .then((res) => res.json())
+      .then((data) => setNotes(data))
+      .catch((err) => console.error("Error fetching notes:", err));
+  };
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+  // Validation schema
   const validationSchema = Yup.object({
     noteContent: Yup.string().required("Please Enter Note Content"),
   });
-
+  // Add note form
   const formik = useFormik({
     initialValues: {
       noteContent: "",
     },
     validationSchema,
-    onSubmit: () => {
-      Swal.fire({
-        title: "Success!",
-        text: "New note successfully added",
-        icon: "success",
-        timer: 1000,
-        showConfirmButton: true,
-        timerProgressBar: true,
-      }).then(() => {
-        formik.resetForm();  // Reset form fields after submission
-        navigate("/note_manage");
-      });
+    onSubmit: (values) => {
+      fetch("http://localhost:8081/add-note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note_content: values.noteContent }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            Swal.fire({
+              title: "Success!",
+              text: "New Note Successfully Added",
+              icon: "success",
+              timer: 1000,
+              showConfirmButton: false,
+              timerProgressBar: true,
+            }).then(() => {
+              formik.resetForm();
+              fetchNotes();
+            });
+          } else {
+            Swal.fire("Error!", "Failed to add note.", "error");
+          }
+        })
+        .catch(() => {
+          Swal.fire("Error!", "Something went wrong.", "error");
+        });
     },
   });
+  // Open Edit Modal
+  const openEditModal = (note) => {
+    setCurrentNote({ id: note.nid, content: note.notes });
+    setIsModalOpen(true);
+  };
+  // Update note
+  const handleUpdateNote = () => {
+    if (!currentNote.content.trim()) {
+      Swal.fire("Validation Error", "Note content is required", "warning");
+      return;
+    }
 
+    fetch(`http://localhost:8081/update-note/${currentNote.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ note_content: currentNote.content }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          Swal.fire({
+            title: "Updated!",
+            text: "Note has been updated.",
+            icon: "success",
+            timer: 1000,
+            showConfirmButton: false,
+            timerProgressBar: true,
+          });
+          fetchNotes();
+          setIsModalOpen(false);
+        } else {
+          Swal.fire("Error!", "Failed to update note.", "error");
+        }
+      })
+      .catch(() => Swal.fire("Error!", "Something went wrong.", "error"));
+  };
+  // Delete note
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this note?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`http://localhost:8081/delete-note/${id}`, {
+          method: "DELETE",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              Swal.fire({
+                title: "Deleted!",
+                text: "Note has been deleted.",
+                icon: "success",
+                timer: 1000,
+                showConfirmButton: false,
+                timerProgressBar: true,
+              });
+              fetchNotes();
+            } else {
+              Swal.fire("Error!", "Failed to delete note.", "error");
+            }
+          })
+          .catch(() => {
+            Swal.fire("Error!", "Something went wrong.", "error");
+          });
+      }
+    });
+  };
   return (
     <div className="p-6 flex flex-row max-w-full justify-between gap-6">
-      <div className="bg-white shadow-md rounded-lg p-6 w-1/2">
+      {/* Add Note Form */}
+      <div className="bg-white shadow-md rounded-lg p-6 w-1/2 h-80">
         <h2 className="text-xl font-bold mb-4">Add Note</h2>
         <form onSubmit={formik.handleSubmit} className="space-y-4">
           <div>
@@ -50,16 +154,11 @@ const ManageNote = () => {
               </span>
             )}
           </div>
-
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Add Note
-          </button>
+          <Submit_Button buttonType="submit" buttonName="+ Add Notes" />
         </form>
       </div>
 
+      {/* Note List */}
       <div className="bg-white shadow-md rounded-lg p-6 w-1/2">
         <h2 className="text-xl font-bold mb-4">Note List</h2>
         <div className="overflow-x-auto">
@@ -72,26 +171,69 @@ const ManageNote = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="px-4 py-2 text-center">1</td>
-                <td className="px-4 py-2 text-center">Sample note content</td>
-                <td className="px-4 py-2 space-x-4 text-center">
-                  <Link>
-                    <button className="text-blue-600 hover:text-blue-800">
-                      <FaEdit />
-                    </button>
-                  </Link>
-                  <Link>
-                    <button className="text-red-600 hover:text-red-800">
-                      <FaTrash />
-                    </button>
-                  </Link>
-                </td>
-              </tr>
+              {notes.length > 0 ? (
+                notes.map((note, index) => (
+                  <tr key={note.note_id}>
+                    <td className="px-4 py-2 text-center">{index + 1}</td>
+                    <td className="px-4 py-2 text-center">{note.notes}</td>
+                    <td className="px-4 py-2 text-center space-x-4">
+                      <button
+                        onClick={() => openEditModal(note)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(note.nid)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="text-center py-4">
+                    No notes found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Edit Note Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Edit Note</h2>
+            <textarea
+              rows="4"
+              className="w-full border rounded p-2 focus:outline-sky-500"
+              value={currentNote.content}
+              onChange={(e) =>
+                setCurrentNote({ ...currentNote, content: e.target.value })
+              }
+            />
+            <div className="flex justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateNote}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
