@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 const Login = () => {
     return (
       <div className="flex h-screen">
@@ -33,10 +34,10 @@ const Login = () => {
           </form>
   
           <p className="mt-4 text-gray-500">
-            Don’t have an account?{" "}
-            <a href="#" className="text-blue-600 hover:underline">
-              Forgote
-            </a>
+          Don’t have an account?{" "}
+          <Link to="/forgot_password" className="text-blue-600 hover:underline">
+            Forgot Password?
+          </Link>
           </p>
         </div>
   

@@ -19,9 +19,16 @@ import Leave_Manage from "./Pages/Leave_Manage";
 import Add_Leave from "./Pages/Add_Leave";
 import Logout from "./Pages/Logout";
 import NotFoundPage from "./Components/PageNotFound";
+import Forgot_Password from './Forgot_Password.jsx'; 
+import OTP_Verify from "./OTP_Verify";
+import Reset_Password from "./Reset_Password";
+
+import axios from "axios";
+
+axios.defaults.baseURL = "http://localhost:8081";
+axios.defaults.withCredentials = true;
 
 const App = () => {
-  
   return (
     <Router>
       <Routes>
@@ -44,7 +51,9 @@ const App = () => {
         <Route path="/add_material" element={ <MasterPage><Add_Material /></MasterPage> }/>
         <Route path="/add_leave" element={ <MasterPage><Add_Leave /></MasterPage> }/>
         <Route path="/leave_manage" element={ <MasterPage><Leave_Manage /></MasterPage> }/>
-
+        <Route path="/forgot_password" element={ <Forgot_Password /> } />
+        <Route path="/verify_otp" element={ <OTP_Verify /> } />
+        <Route path="/reset_password" element={ <Reset_Password /> } />
         <Route path="/page" element={ <NotFoundPage /> } />
       </Routes>
     </Router>

@@ -7,8 +7,25 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const app = express();
-app.use(cors());
-app.use(express.json()); // ✅ To parse JSON data
+const session = require("express-session");
+app.use(express.json());
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+// Set up session
+app.use(
+  session({
+    secret: "your_secret_key",
+    resave: false,
+    saveUninitialized: false, // 🔹 Only store sessions after login
+    cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
+  })
+);
 
 // Database Connection
 const db = mysql.createConnection({
@@ -122,7 +139,7 @@ app.delete("/delete_class/:id", (req, res) => {
   });
 });
 
-// Fetch All Subject 
+// Fetch All Subject
 app.get("/get_subjects", (req, res) => {
   const sql = "SELECT * FROM subject_master";
   db.query(sql, (err, result) => {
@@ -341,7 +358,7 @@ app.get("/students", (req, res) => {
     res.json(results);
   });
 });
-// Update Student 
+// Update Student
 app.put("/update-student/:id", update_student.single("image"), (req, res) => {
   const studentId = req.params.id;
   const { firstname, lastname, email, pnumber, dob, gender } = req.body;
@@ -415,7 +432,7 @@ app.put("/update-student/:id", update_student.single("image"), (req, res) => {
     );
   });
 });
-// Delete Student 
+// Delete Student
 app.delete("/delete-student/:id", (req, res) => {
   const { id } = req.params;
 
@@ -453,14 +470,20 @@ app.delete("/delete-student/:id", (req, res) => {
         db.query(deleteUserQuery, [uid], (err, userResult) => {
           if (err) {
             console.error("❌ Error deleting user:", err);
-            return res.status(500).json({ error: "Error deleting associated user" });
+            return res
+              .status(500)
+              .json({ error: "Error deleting associated user" });
           }
 
           console.log("✅ User deleted successfully");
-          res.status(200).json({ message: "Faculty and associated user deleted successfully" });
+          res.status(200).json({
+            message: "Faculty and associated user deleted successfully",
+          });
         });
       } else {
-        res.status(200).json({ message: "Faculty deleted, but no associated user found" });
+        res
+          .status(200)
+          .json({ message: "Faculty deleted, but no associated user found" });
       }
     });
   });
@@ -712,7 +735,9 @@ app.put(
 
         const existingData = results[0];
 
-        const newsubjectid = Array.isArray(subject_id) ? subject_id.join(",") : String(subject_id);
+        const newsubjectid = Array.isArray(subject_id)
+          ? subject_id.join(",")
+          : String(subject_id);
 
         console.log(newsubjectid); // Output: "2,3"
         console.log(typeof newsubjectid);
@@ -797,14 +822,20 @@ app.delete("/delete-faculty/:id", (req, res) => {
         db.query(deleteUserQuery, [uid], (err, userResult) => {
           if (err) {
             console.error("❌ Error deleting user:", err);
-            return res.status(500).json({ error: "Error deleting associated user" });
+            return res
+              .status(500)
+              .json({ error: "Error deleting associated user" });
           }
 
           console.log("✅ User deleted successfully");
-          res.status(200).json({ message: "Faculty and associated user deleted successfully" });
+          res.status(200).json({
+            message: "Faculty and associated user deleted successfully",
+          });
         });
       } else {
-        res.status(200).json({ message: "Faculty deleted, but no associated user found" });
+        res
+          .status(200)
+          .json({ message: "Faculty deleted, but no associated user found" });
       }
     });
   });
@@ -814,10 +845,10 @@ app.delete("/delete-faculty/:id", (req, res) => {
 app.post("/add-holiday", async (req, res) => {
   const { holidayName, date, month, day } = req.body;
 
-  console.log("HolidayName : "+holidayName);
-  console.log("HolidayDate : "+date);
-  console.log("HolidayMonth : "+month);
-  console.log("HolidayDay : "+day);
+  console.log("HolidayName : " + holidayName);
+  console.log("HolidayDate : " + date);
+  console.log("HolidayMonth : " + month);
+  console.log("HolidayDay : " + day);
   try {
     const { holidayName, date, month, day } = req.body;
 
@@ -826,14 +857,12 @@ app.post("/add-holiday", async (req, res) => {
       [holidayName, date, day, month]
     );
     return res.json({ success: true });
-  
   } catch (error) {
     console.error("Error adding holiday:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
-  
 });
-// Get Month 
+// Get Month
 app.get("/get-months", (req, res) => {
   const sql = "SELECT * FROM month";
   db.query(sql, (err, result) => {
@@ -841,8 +870,8 @@ app.get("/get-months", (req, res) => {
     return res.json(result);
   });
 });
-// Get Holiday 
-app.get('/get-holidays', (req, res) => {
+// Get Holiday
+app.get("/get-holidays", (req, res) => {
   const monthName = req.query.monthname;
 
   // Step 1: Find the month_id from month_master
@@ -877,7 +906,7 @@ app.get('/get-holidays', (req, res) => {
     });
   });
 });
-// Update Holiday 
+// Update Holiday
 app.put("/update-holiday/:id", (req, res) => {
   const { id } = req.params;
   const { holiday_name, holiday_date } = req.body;
@@ -922,17 +951,23 @@ app.put("/update-holiday/:id", (req, res) => {
       WHERE hid = ?
     `;
 
-    db.query(updateQuery, [holiday_name, formattedDate, dayName, month_id, id], (err, result) => {
-      if (err) {
-        console.error("Error updating holiday:", err);
-        return res.status(500).json({ error: "DB error while updating holiday" });
-      }
+    db.query(
+      updateQuery,
+      [holiday_name, formattedDate, dayName, month_id, id],
+      (err, result) => {
+        if (err) {
+          console.error("Error updating holiday:", err);
+          return res
+            .status(500)
+            .json({ error: "DB error while updating holiday" });
+        }
 
-      res.json({ success: true, message: "Holiday updated successfully" });
-    });
+        res.json({ success: true, message: "Holiday updated successfully" });
+      }
+    );
   });
 });
-// Delete Holiday 
+// Delete Holiday
 app.delete("/delete-holiday/:id", (req, res) => {
   const { id } = req.params;
   const sql = "DELETE FROM holiday_master WHERE hid = ?";
@@ -982,13 +1017,14 @@ app.put("/update-note/:id", (req, res) => {
   });
 });
 
-
-// DELETE a note 
+// DELETE a note
 app.delete("/delete-note/:id", (req, res) => {
   const noteId = req.params.id;
 
   if (!noteId) {
-    return res.status(400).json({ success: false, message: "Note ID is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Note ID is required" });
   }
 
   const sql = "DELETE FROM notes_master WHERE nid = ?";
@@ -999,12 +1035,178 @@ app.delete("/delete-note/:id", (req, res) => {
     }
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "Note not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Note not found" });
     }
 
     res.json({ success: true, message: "Note deleted successfully" });
   });
 });
+
+const otpStore = {};
+// Forget Password
+app.post("/forgot_password", (req, res) => {
+  const { email } = req.body;
+
+  const findEmail = `
+        SELECT email, uid, firstname, lastname FROM student_master WHERE email LIKE ?
+        UNION ALL
+        SELECT email, uid, firstname, lastname FROM faculty_master WHERE email LIKE ?
+    `;
+  const placeholders = new Array(2).fill(`${email}%`);
+
+  db.query(findEmail, placeholders, (err, result) => {
+    if (err) return res.status(500).json({ error: "Internal server error" });
+    if (result.length === 0)
+      return res.status(404).json({ error: "Email is not registered!" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 2 * 60 * 1000;
+
+    const { uid, firstname, lastname } = result[0];
+
+    // Store OTP
+    otpStore[email] = { otp, expiry: otpExpiry };
+
+    // Store user info in session (consistent object)
+    req.session.u_id = {
+      userId: uid,
+      firstName: firstname,
+      lastName: lastname,
+      email: email,
+    };
+    console.log("New Session set:", req.session.u_id.userId);
+    const mailOptions = {
+      from: '"EDUSPHERE TEAM" <support@edusphere.com>',
+      to: email,
+      subject: "🔐 Password Reset OTP - Edusphere",
+      html: `
+          <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; padding: 40px; background: linear-gradient(to bottom, #2c3e50, #1c2833); color: #fff; border-radius: 10px; text-align: center;">
+              <h1 style="font-size: 26px; margin-bottom: 10px; color: #f1c40f;">🔐 Password Reset Request</h1>
+              <p style="font-size: 16px; color: #ccc;">We received a request to reset your password for <strong>Edusphere</strong>.</p>
+              <div style="margin: 30px 0; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
+                  <p style="font-size: 18px; margin-bottom: 10px; color: #f1c40f;">Your One-Time Password (OTP) is:</p>
+                  <p style="font-size: 32px; font-weight: bold; color: #fff;">${otp}</p>
+                  <p style="font-size: 14px; color: #bbb;">This OTP is valid for 1 minutes.</p>
+              </div>
+              <p style="font-size: 14px; color: #eee;">If you didn’t request this, you can safely ignore this email.</p>
+              <div style="margin-top: 30px; font-size: 14px; color: #ccc;">
+                  <p>Need help? Contact us at <a href="mailto:support@edusphere.com" style="color: #f1c40f;">support@edusphere.com</a></p>
+                  <p>— The Edusphere Team</p>
+              </div>
+          </div>
+      `,
+    };
+
+    transporter.sendMail(mailOptions, (emailErr) => {
+      if (emailErr)
+        return res.status(500).json({ error: "Failed to send OTP email." });
+
+      console.log("✅ OTP sent and session saved:", req.session.u_id);
+      return res.status(200).json({ message: "OTP sent to your email." });
+    });
+  });
+});
+// Verify OTP
+app.post("/verify_otp", (req, res) => {
+  const { email, otp } = req.body;
+  const stored = otpStore[email];
+
+  if (!stored || stored.otp !== otp) {
+    return res.status(400).json({ error: "Invalid or expired OTP." });
+  }
+
+  if (Date.now() > stored.expiry) {
+    delete otpStore[email];
+    return res.status(400).json({ error: "OTP has expired." });
+  }
+
+  const findUserQuery = `
+    SELECT uid, firstname, lastname FROM student_master WHERE email = ?
+    UNION ALL
+    SELECT uid, firstname, lastname FROM faculty_master WHERE email = ?
+  `;
+  const values = [email, email];
+
+  db.query(findUserQuery, values, (err, result) => {
+    if (err || result.length === 0) {
+      return res.status(500).json({ error: "User not found or DB error." });
+    }
+    const user = result[0];
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Session error" });
+      }
+      delete otpStore[email];
+      return res.status(200).json({ message: "OTP verified successfully." });
+    });
+  });
+});
+// Reset Password
+app.post("/reset_password", async (req, res) => {
+  const password = req.body.password;
+  console.log("Password :", password);
+
+  if (!req.session || !req.session.u_id) {
+    console.log("🚫 No session or session expired.");
+    return res.status(401).json({ error: "Session not found or expired." });
+  }
+
+  const { userId, firstName, lastName, email } = req.session.u_id;
+
+  try {
+    const hash_password = await bcrypt.hash(password, 10);
+    const query = `UPDATE users SET password = ? WHERE uid = ?`;
+
+    db.query(query, [hash_password, userId], (err, result) => {
+      if (err) {
+        console.error("❌ DB Error:", err);
+        return res.status(500).json({ error: "Database error." });
+      }
+
+      if (result.affectedRows > 0) {
+        // ✅ Send confirmation email
+        const fullName = `${firstName} ${lastName}`.trim();
+        const mailOptions = {
+          from: '"EDUSPHERE TEAM" <support@edusphere.com>',
+          to: email,
+          subject: "✅ Password Changed - Edusphere",
+          html: `
+            <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; padding: 40px; background: linear-gradient(to bottom, #2c3e50, #1c2833); color: #fff; border-radius: 10px; text-align: center;">
+              <h1 style="font-size: 26px; margin-bottom: 10px; color: #2ecc71;">✅ Hello ${fullName},</h1>
+              <p style="font-size: 16px; color: #ccc;">Your password for <strong>Edusphere</strong> has been successfully updated.</p>
+              <div style="margin: 20px auto; background: #34495e; padding: 15px; border-radius: 8px;">
+                <p style="font-size: 16px; color: #f1c40f; margin-bottom: 5px;">🔑 Your new password is:</p>
+                <p style="font-size: 22px; font-weight: bold; color: #fff;">${password}</p>
+              </div>
+              <p style="font-size: 14px; color: #bbb;">If you didn’t make this change, please contact support immediately.</p>
+              <div style="margin-top: 30px; font-size: 14px; color: #ccc;">
+                <p>Need help? Contact us at <a href="mailto:support@edusphere.com" style="color: #f1c40f;">support@edusphere.com</a></p>
+                <p>— The Edusphere Team</p>
+              </div>
+            </div>
+          `,
+        };
+        transporter.sendMail(mailOptions, (emailErr, info) => {
+          if (emailErr) {
+            console.error("❌ Error sending confirmation email:", emailErr);
+          } else {
+            console.log("📧 Confirmation email sent:", info.response);
+          }
+        });
+
+        return res.status(200).json({ message: "Password reset successful." });
+      } else {
+        return res.status(404).json({ error: "User not found." });
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error:", error);
+    return res.status(500).json({ error: "Server error." });
+  }
+});
+
 // Start the server
 app.listen(8081, () => {
   console.log("Server is running on port 8081");
