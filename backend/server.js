@@ -82,6 +82,59 @@ const faculty_upload = multer({ storage: faculty_storage });
 const update_student = multer({ storage: multer.memoryStorage() });
 const update_faculty = multer({ storage: update_faculty_storage });
 
+app.get("/session", (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ message: "No active session" });
+  }
+  res.json({ user: req.session.user });
+});
+
+app.post("/login", (req, res) => {
+  const { userName, password } = req.body;
+
+  const sql = "SELECT * FROM users WHERE username = ?";
+
+  db.query(sql, [userName], async (err, result) => {
+      if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).json({ error: "Server error" });
+      }
+
+      if (result.length === 0) {
+          return res.status(401).json({ error: "Username not registered" });
+      }
+
+      const user = result[0];
+      const hashedPassword = user.password;
+
+      const isMatch = await bcrypt.compare(password, hashedPassword);
+      if (!isMatch) {
+          return res.status(401).json({ error: "Incorrect password" });
+      }
+
+      req.session.user = {
+          userId: user.uid,
+          userName: user.username,
+          email: user.username,
+          role: user.role,
+          password: user.password
+      };
+
+      console.log("Session After Login:", req.session); // ✅ Check session
+
+      return res.json({
+          message: "Login successful",
+          user: req.session.user
+      });
+  });
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("connect.sid"); // Adjust cookie name if needed
+  req.session.destroy(() => {
+      res.status(200).json({ message: "Logged out successfully" });
+  });
+});
 // Get all classes
 app.get("/get_classes", (req, res) => {
   const sql = "SELECT * FROM class_master";
