@@ -69,7 +69,6 @@ const App = () => {
     <Router>
       <Routes>
         {/* Wrap routes with MasterPage */}
-        {/* <Route path="/" element={ <Login /> } /> */}
         <Route path="/" element={<Login setUserRole={setUserRole} />} />
         <Route path="/logout" element={ <Logout /> } />
 
@@ -94,6 +93,7 @@ const App = () => {
         <Route path="/verify_otp" element={ <OTP_Verify /> } />
         <Route path="/reset_password" element={ <Reset_Password /> } />
         <Route path="/page" element={ <NotFoundPage /> } />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

@@ -254,7 +254,6 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-
             {/* Tabs Section */}
             <div className="w-full md:w-2/3 py-10 px-4 bg-white shadow-lg">
               {/* Tabs Navigation */}
@@ -412,7 +411,7 @@ const Profile = () => {
                 />
               </label>
 
-              {/* Buttons */}
+              {/* Buttons
               <div className="flex justify-end mt-4 space-x-3">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
@@ -426,7 +425,7 @@ const Profile = () => {
                 >
                   Upload
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         )}

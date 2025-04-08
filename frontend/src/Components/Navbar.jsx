@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FaUser, FaSignOutAlt, FaKey, FaLock } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
@@ -23,6 +23,7 @@ export const Navbar = () => {
     checkPassword();
   }, []);
 
+  const dropdownRef = useRef(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(() => {
@@ -32,6 +33,17 @@ export const Navbar = () => {
   const [password, setPassword] = useState("");
   const correctPassword = lockPassword;
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLockScreen = () => {
     setIsLocked(true);
@@ -57,7 +69,7 @@ export const Navbar = () => {
           </Link>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               onClick={toggleDropdown}
               className="bg-dark-500 p-2 rounded text-white flex items-center"
@@ -76,7 +88,7 @@ export const Navbar = () => {
                   <FaKey className="w-4 h-4" />
                   <Link to="/change_password">Change Password</Link>
                 </li>
-                <li className="px-4 py-2 flex items-center gap-2 hover:font-bold hover:scale-102">
+                <li className="px-4 py-2 flex items-center gap-2 hover:font-bold border-b border-gray-300 hover:scale-102">
                   <FaLock className="w-4 h-4" />
                   <button onClick={handleLockScreen}>Lock Screen</button>
                 </li>

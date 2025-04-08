@@ -3,7 +3,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { MdLockOutline } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import PropTypes from "prop-types";
 const ProtectedRoute = ({ element, allowedRoles, userRole }) => {
   const navigate = useNavigate();
 
@@ -104,5 +104,9 @@ const ProtectedRoute = ({ element, allowedRoles, userRole }) => {
   }
   return element;
 };
-
+ProtectedRoute.propTypes = {
+  element: PropTypes.element.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  userRole: PropTypes.string,
+};
 export default ProtectedRoute;
