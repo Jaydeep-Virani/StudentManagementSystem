@@ -81,7 +81,7 @@ const App = () => {
         <Route path="/holiday" element={ <ProtectedRoute element={<MasterPage><Holiday /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
         <Route path="/add_holiday" element={ <ProtectedRoute element={<MasterPage><Add_Holiday /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
         <Route path="/profile" element={ <ProtectedRoute element={<MasterPage><Profile /></MasterPage>} allowedRoles={[3,4]} userRole={userRole} /> }/>
-        <Route path="/change_password" element={ <ProtectedRoute element={<MasterPage><Change_Password /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
+        <Route path="/change_password" element={ <ProtectedRoute element={<MasterPage><Change_Password /></MasterPage>} allowedRoles={[3,4]} userRole={userRole} /> }/>
         <Route path="/class_manage" element={ <ProtectedRoute element={<MasterPage><Class_Manage /></MasterPage>} allowedRoles={[3]} userRole={userRole} /> }/>
         <Route path="/subject_manage" element={ <ProtectedRoute element={<MasterPage><Subject_Manage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
         <Route path="/note_manage" element={ <ProtectedRoute element={<MasterPage><Note_Manage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>

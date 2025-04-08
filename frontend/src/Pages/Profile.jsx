@@ -123,13 +123,28 @@ const Profile = () => {
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+  
+    // ✅ Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      Swal.fire({
+        toast: true,
+        position: "top",
+        icon: "error",
+        title: "Only JPG, PNG, or SVG files are allowed!",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+      return;
+    }
+  
     const formData = new FormData();
     formData.append("profilePicture", file);
     formData.append("email", formik.values.email);
     formData.append("firstName", formik.values.firstName);
     formData.append("lastName", formik.values.lastName);
-
+  
     try {
       const response = await axios.put(
         "http://localhost:8081/update_profile_picture",
@@ -139,8 +154,8 @@ const Profile = () => {
           withCredentials: true,
         }
       );
-
-      setProfilePic(response.data.imageUrl); 
+  
+      setProfilePic(response.data.imageUrl);
       setIsEditModalOpen(false);
       Swal.fire({
         toast: true,

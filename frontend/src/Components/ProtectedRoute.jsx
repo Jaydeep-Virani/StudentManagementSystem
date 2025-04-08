@@ -66,25 +66,42 @@ const ProtectedRoute = ({ element, allowedRoles, userRole }) => {
 
   if (!allowedRoles.includes(userRole)) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-        <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full">
-          <MdLockOutline className="text-red-500 text-6xl mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800">Access Denied</h2>
-          <p className="text-gray-600 mt-2">
-            You do not have permission to view this page.
-          </p>
-          <button
-            onClick={() => navigate(-1)}
-            className="mt-6 flex items-center justify-center gap-2 bg-red-500 text-white px-5 py-3 w-full rounded-full shadow-md hover:bg-red-600 transition-all"
+      <div className="flex items-center justify-center min-h-screen bg-white px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 border border-blue-100 p-10 rounded-3xl shadow-lg max-w-lg w-full text-center"
+        >
+          <motion.div
+            initial={{ rotate: -10, scale: 0.9 }}
+            animate={{ rotate: 0, scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 120 }}
+            className="mb-5"
           >
-            <FaArrowLeft className="text-lg" />
+            <MdLockOutline className="text-blue-500 text-6xl mx-auto animate-pulse" />
+          </motion.div>
+
+          <h2 className="text-3xl font-bold text-blue-700 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-blue-500 text-sm mb-6">
+            Sorry, you don’t have the necessary permissions to access this page.
+          </p>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center gap-2 px-6 py-3 w-full rounded-full bg-blue-500 text-white font-semibold shadow-md hover:bg-blue-600 transition-all"
+          >
+            <FaArrowLeft className="text-base" />
             <span>Go Back</span>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
-
   return element;
 };
 

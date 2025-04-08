@@ -52,7 +52,9 @@ app.get("/session", (req, res) => {
 });
 app.post("/login", (req, res) => {
   const { userName, password } = req.body;
-
+  req.session.pass = {
+    password: password,
+    };
   const sql = "SELECT * FROM users WHERE username = ?";
 
   db.query(sql, [userName], async (err, result) => {
@@ -94,6 +96,12 @@ app.post("/logout", (req, res) => {
   req.session.destroy(() => {
       res.status(200).json({ message: "Logged out successfully" });
   });
+});
+app.get("/password", (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ message: "No active session" });
+  }
+  res.json({ user: req.session.pass });
 });
 
 const folderMap = {
@@ -385,6 +393,58 @@ app.delete("/delete_profile_picture", async (req, res) => {
       res.status(404).json({ message: "No profile picture found" });
     }
   });  
+});
+
+app.post("/change_password", async (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ error: "Unauthorized access" });
+  }
+
+  const { currentPassword, newPassword } = req.body;
+  const userEmail = req.session.user.email;
+
+  try {
+      // Fetch user from DB
+      const sql = "SELECT password FROM users WHERE username = ?";
+      db.query(sql, [userEmail], async (err, result) => {
+          if (err) {
+              console.error("Database Error:", err);
+              return res.status(500).json({ error: "Server error" });
+          }
+
+          if (result.length === 0) {
+              return res.status(404).json({ error: "User not found" });
+          }
+
+          const hashedPassword = result[0].password;
+
+          // Compare passwords
+          const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
+          if (!isMatch) {
+              return res.status(401).json({ error: "Current password is incorrect" });
+          }
+
+          // Hash new password
+          const saltRounds = 10;
+          const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+          // Update password in DB
+          const updateSql = "UPDATE users SET password = ? WHERE username = ?";
+          db.query(updateSql, [newHashedPassword, userEmail], (updateErr) => {
+              if (updateErr) {
+                  console.error("Update Error:", updateErr);
+                  return res.status(500).json({ error: "Could not update password" });
+              }
+              req.session.pass = {
+                password: newPassword,
+              };
+              res.json({ message: "Password changed successfully" });
+          });
+      });
+  } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
+  }
 });
 // Get all classes
 app.get("/get_classes", (req, res) => {
