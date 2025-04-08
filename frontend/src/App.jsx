@@ -31,17 +31,46 @@ axios.defaults.withCredentials = true;
 
 const App = () => {
   const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:8081/session", { withCredentials: true })
-      .then((response) => setUserRole(response.data.user.role))
-      .catch(() => setUserRole(null));
+    const fetchSession = async () => {
+      try {
+        const response = await axios.get("/session");
+        console.log("Session Response:", response.data);
+        if (response.data && response.data.user) {
+          console.log("Setting role:", response.data.user.role);
+          setUserRole(response.data.user.role);
+        } else {
+          setUserRole(null);
+        }
+      } catch (err) {
+        console.error("Error fetching session:", err);
+        setUserRole(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchSession();
   }, []);
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid mx-auto mb-4"></div>
+          <p className="text-gray-700 text-lg font-semibold">Loading, please wait...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <Router>
       <Routes>
         {/* Wrap routes with MasterPage */}
-        <Route path="/" element={ <Login /> } />
+        {/* <Route path="/" element={ <Login /> } /> */}
+        <Route path="/" element={<Login setUserRole={setUserRole} />} />
         <Route path="/logout" element={ <Logout /> } />
 
         <Route path="/dashboard" element={ <ProtectedRoute element={<MasterPage><Dashboard /></MasterPage>} allowedRoles={[1, 2, 3, 4, 5]} userRole={userRole} /> }/>
@@ -51,7 +80,7 @@ const App = () => {
         <Route path="/faculty_manage" element={ <ProtectedRoute element={<MasterPage><FacultyManage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
         <Route path="/holiday" element={ <ProtectedRoute element={<MasterPage><Holiday /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
         <Route path="/add_holiday" element={ <ProtectedRoute element={<MasterPage><Add_Holiday /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/profile" element={ <ProtectedRoute element={<MasterPage><Profile /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
+        <Route path="/profile" element={ <ProtectedRoute element={<MasterPage><Profile /></MasterPage>} allowedRoles={[3,4]} userRole={userRole} /> }/>
         <Route path="/change_password" element={ <ProtectedRoute element={<MasterPage><Change_Password /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
         <Route path="/class_manage" element={ <ProtectedRoute element={<MasterPage><Class_Manage /></MasterPage>} allowedRoles={[3]} userRole={userRole} /> }/>
         <Route path="/subject_manage" element={ <ProtectedRoute element={<MasterPage><Subject_Manage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>

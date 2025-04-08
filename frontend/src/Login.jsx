@@ -1,12 +1,14 @@
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
-const Login = () => {
+import PropTypes from "prop-types";
+
+const Login = ({ setUserRole }) => {
   const [error, setError] = useState("");
   const [, setUserSession] = useState(null);
-  const navigate = useNavigate(); // ✅ Use navigate for redirection
+  const navigate = useNavigate();
 
   const validationSchema = Yup.object({
     userName: Yup.string().required("Please enter user name"),
@@ -22,9 +24,9 @@ const Login = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      setError(""); // Reset error before submitting
+      setError("");
       try {
-        await axios.post(
+        const response = await axios.post(
           "http://localhost:8081/login",
           {
             userName: values.userName,
@@ -32,8 +34,16 @@ const Login = () => {
           },
           { withCredentials: true }
         );
+
+        if (response.data && response.data.user) {
+          setUserSession(response.data.user);
+          setUserRole(response.data.user.role); // ✅ set the user role
+          navigate("/dashboard");
+        } else {
+          setError("Invalid login response.");
+        }
       } catch (error) {
-        if (error.response && error.response.data) {
+        if (error.response?.data?.error) {
           setError(error.response.data.error);
         } else {
           setError("An unknown error occurred.");
@@ -42,31 +52,28 @@ const Login = () => {
     },
   });
 
-  // ✅ Function to Check Active Session
-  const checkSession = async () => {
-    try {
-      const response = await axios.get("http://localhost:8081/session", {
-        withCredentials: true,
-      });
-      setUserSession(response.data);
-
-      // ✅ Redirect if user role is 1 (Admin)
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("No Active Session:", error.response?.data || error);
-    }
-  };
-
   useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await axios.get("http://localhost:8081/session", {
+          withCredentials: true,
+        });
+        setUserSession(response.data);
+        setUserRole(response.data.role); // ✅ Also set user role from session (optional)
+        navigate("/dashboard");
+      } catch (error) {
+        console.log("No active session:", error?.response?.data || error.message);
+      }
+    };
     checkSession();
-  });
+  }, []);
+
   return (
     <div className="flex h-screen">
       {/* Left Section */}
       <div className="w-full md:w-1/4 flex flex-col justify-center items-center px-6 md:px-12 lg:px-24">
         <div className="mb-6">
-          <img src="./Logo/IMG_1700.PNG" alt="" />
-          {/* <h1 className="text-3xl font-bold">EDUSPHERE</h1> */}
+          <img src="./Logo/IMG_1700.PNG" alt="logo" />
         </div>
         <h2 className="text-2xl font-semibold mb-2">Welcome Back!</h2>
         <p className="text-gray-500 mb-6">Sign in to continue to Edusphere.</p>
@@ -87,6 +94,7 @@ const Login = () => {
               </span>
             )}
           </div>
+
           <div className="mb-4">
             <label className="block text-gray-700">Password</label>
             <input
@@ -97,14 +105,22 @@ const Login = () => {
               placeholder="password"
             />
             {formik.touched.password && formik.errors.password && (
-              <span className="text-red-500 text-sm">{formik.errors.password}</span>
+              <span className="text-red-500 text-sm">
+                {formik.errors.password}
+              </span>
             )}
           </div>
+
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          >
             Log In
           </button>
         </form>
+
         <p className="mt-4 text-gray-500">
           Don’t have an account?{" "}
           <Link to="/forgot_password" className="text-blue-600 hover:underline">
@@ -113,7 +129,7 @@ const Login = () => {
         </p>
       </div>
 
-      {/* Right Section - 75% Width with Opacity */}
+      {/* Right Section */}
       <div className="md:w-3/4 relative">
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div
@@ -123,6 +139,10 @@ const Login = () => {
       </div>
     </div>
   );
+};
+
+Login.propTypes = {
+  setUserRole: PropTypes.func.isRequired,
 };
 
 export default Login;

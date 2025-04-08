@@ -43,52 +43,13 @@ const transporter = nodemailer.createTransport({
     pass: "#", // Use App Password if 2FA is enabled
   },
 });
-
-const student_storage = multer.diskStorage({
-  destination: path.join(__dirname, "../frontend/public/StudentImage"),
-  filename: (req, file, cb) => {
-    const studentName = req.body.firstName + "_" + req.body.lastName;
-    const uniqueSuffix = Date.now();
-    cb(
-      null,
-      studentName + "_" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
-const faculty_storage = multer.diskStorage({
-  destination: path.join(__dirname, "../frontend/public/FacultyImage"),
-  filename: (req, file, cb) => {
-    const studentName = req.body.firstName + "_" + req.body.lastName;
-    const uniqueSuffix = Date.now();
-    cb(
-      null,
-      studentName + "_" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
-const update_faculty_storage = multer.diskStorage({
-  destination: path.join(__dirname, "../frontend/public/FacultyImage"),
-  filename: function (req, file, cb) {
-    const { firstname, lastname } = req.body;
-    const fileExt = path.extname(file.originalname);
-    const filename = `${firstname}_${lastname}${fileExt}`;
-    const uniqueSuffix = Date.now();
-    cb(null, filename + "_" + uniqueSuffix);
-  },
-});
-
-const student_upload = multer({ storage: student_storage });
-const faculty_upload = multer({ storage: faculty_storage });
-const update_student = multer({ storage: multer.memoryStorage() });
-const update_faculty = multer({ storage: update_faculty_storage });
-
 app.get("/session", (req, res) => {
+  console.log("Session request:", req.session.user); // ✅ Debug
   if (!req.session.user) {
-      return res.status(401).json({ message: "No active session" });
+    return res.status(401).json({ message: "No active session" });
   }
   res.json({ user: req.session.user });
 });
-
 app.post("/login", (req, res) => {
   const { userName, password } = req.body;
 
@@ -128,12 +89,302 @@ app.post("/login", (req, res) => {
       });
   });
 });
-
 app.post("/logout", (req, res) => {
   res.clearCookie("connect.sid"); // Adjust cookie name if needed
   req.session.destroy(() => {
       res.status(200).json({ message: "Logged out successfully" });
   });
+});
+
+const folderMap = {
+  1: "AdminImage",
+  2: "PrincipalImage",
+  3: "FacultyImage",
+  4: "StudentImage",
+  5: "ParentImage"
+};
+
+const student_storage = multer.diskStorage({
+  destination: path.join(__dirname, "../frontend/public/StudentImage"),
+  filename: (req, file, cb) => {
+    const studentName = req.body.firstName + "_" + req.body.lastName;
+    const uniqueSuffix = Date.now();
+    cb(
+      null,
+      studentName + "_" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
+const faculty_storage = multer.diskStorage({
+  destination: path.join(__dirname, "../frontend/public/FacultyImage"),
+  filename: (req, file, cb) => {
+    const studentName = req.body.firstName + "_" + req.body.lastName;
+    const uniqueSuffix = Date.now();
+    cb(
+      null,
+      studentName + "_" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
+const update_faculty_storage = multer.diskStorage({
+  destination: path.join(__dirname, "../frontend/public/FacultyImage"),
+  filename: function (req, file, cb) {
+    const { firstname, lastname } = req.body;
+    const fileExt = path.extname(file.originalname);
+    const filename = `${firstname}_${lastname}${fileExt}`;
+    const uniqueSuffix = Date.now();
+    cb(null, filename + "_" + uniqueSuffix);
+  },
+});
+
+const profile_picture_storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const role = req.session.user.role; // Make sure session is set
+    const folder = folderMap[role];
+
+    if (!folder) return cb(new Error("Invalid role"));
+
+    const folderPath = path.join(__dirname, "../frontend/public", folder);
+    cb(null, folderPath);
+  },
+  filename: (req, file, cb) => {
+    const firstName = req.body.firstName || "user";
+    const lastName = req.body.lastName || "profile";
+    const timeStamp = Date.now();
+    const extension = path.extname(file.originalname);
+    const safeName = `${firstName}_${lastName}_${timeStamp}${extension}`;
+    cb(null, safeName);
+  }
+});
+
+const student_upload = multer({ storage: student_storage });
+const faculty_upload = multer({ storage: faculty_storage });
+const update_student = multer({ storage: multer.memoryStorage() });
+const update_faculty = multer({ storage: update_faculty_storage });
+const profile_picture_upload = multer({ storage: profile_picture_storage });
+
+// Get Profile
+app.get('/profile', (req, res) => {
+  console.log("🔍 Session Debug:", req.session); // ✅ Log session
+
+  if (!req.session.user) {
+      return res.status(401).json({
+          message: "Unauthorized access",
+          session: req.session  // ✅ Return session object for debugging
+      });
+  }
+
+  const email = req.session.user.email;
+  console.log("✅ User email from session:", email);
+
+  const sql = `
+      SELECT email FROM student_master WHERE email LIKE ?
+      UNION ALL
+      SELECT email FROM faculty_master WHERE email LIKE ?
+  `;
+
+  const emailSearch = `%${email}%`;
+
+  db.query(sql, [emailSearch, emailSearch, emailSearch, emailSearch, emailSearch], (err, result) => {
+      if (err) {
+          console.error("❌ Database Error:", err);
+          return res.status(500).json({ message: "Error inside server", error: err.message });
+      }
+      const matchEmail = result[0].email;
+      console.log("✅ Query Result:", result);
+      // return res.json(matchEmail);
+
+      const profileQuery = `
+      SELECT firstname, lastname, email, pnumber, dob, address, gender, image FROM student_master WHERE email = ?
+      UNION ALL
+      SELECT firstname, lastname, email, pnumber, dob, address, gender, image FROM faculty_master WHERE email = ?
+  `;
+
+      db.query(profileQuery, [matchEmail, matchEmail, matchEmail, matchEmail, matchEmail], (err, profileResult) => {
+          if (err) {
+              console.error("❌ Database Error:", err);
+              return res.status(500).json({ message: "Error retrieving profile", error: err.message });
+          }
+
+          console.log("✅ Full Profile Data:", profileResult);
+          return res.json({ message: "Profile retrieved successfully", profile: profileResult[0] });
+
+
+      });
+
+  });
+
+});
+
+// Update Profile 
+app.put("/profile_update", (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ error: "Unauthorized access" });
+  }
+
+  const { role } = req.session.user;
+  let table_name;
+  switch (role) {
+      case 4: table_name = "student_master"; break;
+      case 3: table_name = "faculty_master";
+  }
+
+  const { firstName, lastName, phoneNo, dob, address, gender, email } = req.body;
+  console.log("Updating profile for:", { firstName, lastName, phoneNo, dob, address, gender, email });
+
+  if (!firstName || !lastName || !phoneNo || !dob || !address || !gender || !email) {
+      return res.status(400).json({ error: "All fields are required" });
+  }
+
+  // Ensure user exists before updating
+  const checkQuery = `SELECT * FROM ${table_name} WHERE email = ?`;
+  db.query(checkQuery, [email], (err, result) => {
+      if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ error: "Database error" });
+      }
+      if (result.length === 0) {
+          return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update profile if user exists
+      const updateQuery = `
+          UPDATE ${table_name} 
+          SET firstname = ?, lastname = ?, pnumber = ?, dob = ?, address = ?, gender = ?
+          WHERE email = ?
+      `;
+
+      db.query(updateQuery, [firstName, lastName, phoneNo, dob, address, gender, email], (err, result) => {
+          if (err) {
+              console.error("Database error:", err);
+              return res.status(500).json({ error: "Database error" });
+          }
+          res.json({ message: "Profile updated successfully!" });
+      });
+  });
+});
+
+app.put("/update_profile_picture", profile_picture_upload.single("profilePicture"), async (req, res) => {
+  const { email } = req.body;
+  const { role } = req.session.user;
+
+  if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  let table_name;
+  switch (role) {
+    case 4: table_name = "student_master"; break;
+    case 3: table_name = "faculty_master";
+  }
+
+  const fetchImageQuery = `SELECT image FROM ${table_name} WHERE email = ?`;
+
+  db.query(fetchImageQuery, [email], (err, imageResult) => {
+      if (err) {
+          console.error("❌ Database Error:", err);
+          return res.status(500).json({ message: "Error retrieving profile picture", error: err.message });
+      }
+
+      if (imageResult.length > 0) {
+          const oldImage = imageResult[0].image;
+
+          // 🚨 Ensure the old image is not "default_profile.jpg" before deleting
+          if (oldImage && oldImage !== "default_profile.jpg") {
+              const oldImagePath = path.join(__dirname, "../frontend/public", oldImage);
+
+              fs.unlink(oldImagePath, (unlinkErr) => {
+                  if (unlinkErr && unlinkErr.code !== "ENOENT") {
+                      console.error("⚠️ Error deleting old image:", unlinkErr);
+                  } else {
+                      console.log("✅ Old profile picture deleted successfully.");
+                  }
+              });
+          }
+      }
+
+      // Save new image filename
+      const newImagePath = req.file.filename;
+
+      const updateQuery = `UPDATE ${table_name} SET image = ? WHERE email = ?`;
+
+      db.query(updateQuery, [newImagePath, email], (updateErr, result) => {
+          if (updateErr) {
+              console.error("❌ Database error:", updateErr);
+              return res.status(500).json({ error: "Database error" });
+          }
+          res.json({ message: "Profile Picture updated successfully!", imageUrl: `/uploads/${newImagePath}` });
+      });
+  });
+});
+
+//Dlete Profile Picture
+app.delete("/delete_profile_picture", async (req, res) => {
+  const { email } = req.body;
+  const { role } = req.session.user;
+
+  let table_name;
+  switch (role) {
+    case 4: table_name = "student_master"; break;
+    case 3: table_name = "faculty_master";
+  }
+
+  const fetchImageQuery = `SELECT image FROM ${table_name} WHERE email = ?`;
+
+  db.query(fetchImageQuery, [email], (err, imageResult) => {
+    if (err) {
+      return res.status(500).json({ message: "Error retrieving profile picture", error: err.message });
+    }
+  
+    if (imageResult.length > 0 && imageResult[0].image) {
+      const imageName = imageResult[0].image;
+  
+      // 🔥 Determine folder based on role
+      let imageFolder = "";
+      switch (role) {
+        case 1:
+          imageFolder = "AdminImage";
+          break;
+        case 2:
+          imageFolder = "PrincipalImage";
+          break;
+        case 3:
+          imageFolder = "FacultyImage";
+          break;
+        case 4:
+          imageFolder = "StudentImage";
+          break;
+        case 5:
+          imageFolder = "ParentImage";
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid role" });
+      }
+  
+      // 🧩 Build the full image path
+      const imagePath = path.join(__dirname, "../frontend/public", imageFolder, imageName);
+  
+      // 🔄 Delete the image
+      fs.unlink(imagePath, (unlinkErr) => {
+        if (unlinkErr && unlinkErr.code !== "ENOENT") {
+          console.error("Error deleting image:", unlinkErr);
+          return res.status(500).json({ message: "Failed to delete image" });
+        }
+  
+        // 🛠 Update DB to set default image
+        const updateQuery = `UPDATE ${table_name} SET image = "default_profile.jpg" WHERE email = ?`;
+        db.query(updateQuery, [email], (updateErr) => {
+          if (updateErr) {
+            return res.status(500).json({ error: "Database error" });
+          }
+  
+          res.json({ message: "Profile picture deleted successfully!" });
+        });
+      });
+    } else {
+      res.status(404).json({ message: "No profile picture found" });
+    }
+  });  
 });
 // Get all classes
 app.get("/get_classes", (req, res) => {
