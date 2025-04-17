@@ -103,8 +103,10 @@ const Profile = () => {
             showConfirmButton: false, // Hides the button
             timerProgressBar: true,
           }).then(() => {
-            setActiveTab("overview"); // Switch tab after Swal disappears
+            setActiveTab("overview"); 
+            window.location.reload();
           });
+          
         })
         .catch((error) => {
           console.error("Error updating profile:", error);
@@ -116,6 +118,7 @@ const Profile = () => {
             showConfirmButton: false,
             timerProgressBar: true,
           });
+          
         });
     },
   });
@@ -165,6 +168,8 @@ const Profile = () => {
         showConfirmButton: false,
         timer: 1000,
         timerProgressBar: true,
+      }).then(() => {
+        window.location.reload(); // 🔄 Reload after toast disappears
       });
       fetchProfileData();
     } catch (error) {
@@ -202,9 +207,11 @@ const Profile = () => {
             timer: 1500,
             timerProgressBar: true,
             didClose: () => {
-              fetchProfileData(); // Refresh profile data after toast disappears
+              fetchProfileData(); 
+              window.location.reload();
             }
           });
+           // Reload the page to reflect changes
         } catch (error) {
           console.error("Error deleting profile picture:", error);
           Swal.fire("Error", "Failed to delete profile picture", "error");
@@ -223,6 +230,13 @@ const Profile = () => {
             {/* Profile Card */}
             <div className="w-full md:w-1/3">
               <div className="bg-white shadow-lg rounded-lg p-4 text-center">
+              {userSession.role === 1 && (
+                  <img
+                    src={"AdminImage/" + profilePic}
+                    alt="Profile"
+                    className="w-32 h-32 mx-auto rounded-full border-2 border-blue-500"
+                  />
+                )}
                 {userSession.role === 3 && (
                   <img
                     src={"FacultyImage/" + profilePic}
@@ -230,11 +244,24 @@ const Profile = () => {
                     className="w-32 h-32 mx-auto rounded-full border-2 border-blue-500"
                   />
                 )}
+                {userSession.role === 4 && (
+                  <img
+                    src={"StudentImage/" + profilePic}
+                    alt="Profile"
+                    className="w-32 h-32 mx-auto rounded-full border-2 border-blue-500"
+                  />
+                )}
                 <h2 className="text-lg font-semibold mt-4">
                   {formik.values.firstName} {formik.values.lastName}
                 </h2>
+                {userSession.role === 1 && (
+                  <p className="text-gray-500">Admin</p>
+                )}
                 {userSession.role === 3 && (
                   <p className="text-gray-500">Faculty</p>
+                )}
+                {userSession.role === 4 && (
+                  <p className="text-gray-500">Student</p>
                 )}
                 <div className="mt-4">
                   <button

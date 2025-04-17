@@ -43,6 +43,7 @@ const transporter = nodemailer.createTransport({
     pass: "#", // Use App Password if 2FA is enabled
   },
 });
+
 app.get("/session", (req, res) => {
   console.log("Session request:", req.session.user); // ✅ Debug
   if (!req.session.user) {
@@ -54,54 +55,54 @@ app.post("/login", (req, res) => {
   const { userName, password } = req.body;
   req.session.pass = {
     password: password,
-    };
+  };
   const sql = "SELECT * FROM users WHERE username = ?";
 
   db.query(sql, [userName], async (err, result) => {
-      if (err) {
-          console.error("Database Error:", err);
-          return res.status(500).json({ error: "Server error" });
-      }
+    if (err) {
+      console.error("Database Error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
 
-      if (result.length === 0) {
-          return res.status(401).json({ error: "Username not registered" });
-      }
+    if (result.length === 0) {
+      return res.status(401).json({ error: "Username not registered" });
+    }
 
-      const user = result[0];
-      const hashedPassword = user.password;
+    const user = result[0];
+    const hashedPassword = user.password;
 
-      const isMatch = await bcrypt.compare(password, hashedPassword);
-      if (!isMatch) {
-          return res.status(401).json({ error: "Incorrect password" });
-      }
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
 
-      req.session.user = {
-          userId: user.uid,
-          userName: user.username,
-          email: user.username,
-          role: user.role,
-          password: user.password
-      };
+    req.session.user = {
+      userId: user.uid,
+      userName: user.username,
+      email: user.username,
+      role: user.role,
+      password: user.password,
+    };
 
-      console.log("Session After Login:", req.session); // ✅ Check session
+    console.log("Session After Login:", req.session); // ✅ Check session
 
-      return res.json({
-          message: "Login successful",
-          user: req.session.user
-      });
+    return res.json({
+      message: "Login successful",
+      user: req.session.user,
+    });
   });
 });
 app.post("/logout", (req, res) => {
   res.clearCookie("connect.sid"); // Adjust cookie name if needed
   req.session.destroy(() => {
-      res.status(200).json({ message: "Logged out successfully" });
+    res.status(200).json({ message: "Logged out successfully" });
   });
 });
 app.get("/password", (req, res) => {
   if (!req.session.user) {
-      return res.status(401).json({ message: "No active session" });
+    return res.status(401).json({ message: "No active session" });
   }
-  res.json({ user: req.session.pass });
+  res.json({ user: req.session.pass });
 });
 
 const folderMap = {
@@ -109,7 +110,7 @@ const folderMap = {
   2: "PrincipalImage",
   3: "FacultyImage",
   4: "StudentImage",
-  5: "ParentImage"
+  5: "ParentImage",
 };
 
 const student_storage = multer.diskStorage({
@@ -162,7 +163,7 @@ const profile_picture_storage = multer.diskStorage({
     const extension = path.extname(file.originalname);
     const safeName = `${firstName}_${lastName}_${timeStamp}${extension}`;
     cb(null, safeName);
-  }
+  },
 });
 
 const student_upload = multer({ storage: student_storage });
@@ -172,14 +173,14 @@ const update_faculty = multer({ storage: update_faculty_storage });
 const profile_picture_upload = multer({ storage: profile_picture_storage });
 
 // Get Profile
-app.get('/profile', (req, res) => {
+app.get("/profile", (req, res) => {
   console.log("🔍 Session Debug:", req.session); // ✅ Log session
 
   if (!req.session.user) {
-      return res.status(401).json({
-          message: "Unauthorized access",
-          session: req.session  // ✅ Return session object for debugging
-      });
+    return res.status(401).json({
+      message: "Unauthorized access",
+      session: req.session, // ✅ Return session object for debugging
+    });
   }
 
   const email = req.session.user.email;
@@ -189,126 +190,180 @@ app.get('/profile', (req, res) => {
       SELECT email FROM student_master WHERE email LIKE ?
       UNION ALL
       SELECT email FROM faculty_master WHERE email LIKE ?
+      UNION ALL
+      SELECT email FROM admin_master WHERE email LIKE ?
   `;
 
   const emailSearch = `%${email}%`;
 
-  db.query(sql, [emailSearch, emailSearch, emailSearch, emailSearch, emailSearch], (err, result) => {
-      if (err) {
-          console.error("❌ Database Error:", err);
-          return res.status(500).json({ message: "Error inside server", error: err.message });
-      }
-      const matchEmail = result[0].email;
-      console.log("✅ Query Result:", result);
-      // return res.json(matchEmail);
+  db.query(sql, [emailSearch, emailSearch, emailSearch], (err, result) => {
+    if (err) {
+      console.error("❌ Database Error:", err);
+      return res
+        .status(500)
+        .json({ message: "Error inside server", error: err.message });
+    }
+    const matchEmail = result[0].email;
+    console.log("✅ Query Result:", result);
+    // return res.json(matchEmail);
 
-      const profileQuery = `
+    const profileQuery = `
       SELECT firstname, lastname, email, pnumber, dob, address, gender, image FROM student_master WHERE email = ?
       UNION ALL
       SELECT firstname, lastname, email, pnumber, dob, address, gender, image FROM faculty_master WHERE email = ?
+      UNION ALL
+      SELECT firstname, lastname, email, pnumber, dob, address, gender, image FROM admin_master WHERE email = ?
   `;
 
-      db.query(profileQuery, [matchEmail, matchEmail, matchEmail, matchEmail, matchEmail], (err, profileResult) => {
-          if (err) {
-              console.error("❌ Database Error:", err);
-              return res.status(500).json({ message: "Error retrieving profile", error: err.message });
-          }
+    db.query(
+      profileQuery,
+      [matchEmail, matchEmail, matchEmail],
+      (err, profileResult) => {
+        if (err) {
+          console.error("❌ Database Error:", err);
+          return res
+            .status(500)
+            .json({ message: "Error retrieving profile", error: err.message });
+        }
 
-          console.log("✅ Full Profile Data:", profileResult);
-          return res.json({ message: "Profile retrieved successfully", profile: profileResult[0] });
-
-
-      });
-
+        console.log("✅ Full Profile Data:", profileResult);
+        return res.json({
+          message: "Profile retrieved successfully",
+          profile: profileResult[0],
+        });
+      }
+    );
   });
-
 });
 
-// Update Profile 
+// Update Profile
 app.put("/profile_update", (req, res) => {
   if (!req.session.user) {
-      return res.status(401).json({ error: "Unauthorized access" });
+    return res.status(401).json({ error: "Unauthorized access" });
   }
 
   const { role } = req.session.user;
   let table_name;
   switch (role) {
-      case 4: table_name = "student_master"; break;
-      case 3: table_name = "faculty_master";
+    case 1:
+      table_name = "admin_master";
+      break;
+    case 4:
+      table_name = "student_master";
+      break;
+    case 3:
+      table_name = "faculty_master";
   }
 
-  const { firstName, lastName, phoneNo, dob, address, gender, email } = req.body;
-  console.log("Updating profile for:", { firstName, lastName, phoneNo, dob, address, gender, email });
+  const { firstName, lastName, phoneNo, dob, address, gender, email } =
+    req.body;
+  console.log("Updating profile for:", {
+    firstName,
+    lastName,
+    phoneNo,
+    dob,
+    address,
+    gender,
+    email,
+  });
 
-  if (!firstName || !lastName || !phoneNo || !dob || !address || !gender || !email) {
-      return res.status(400).json({ error: "All fields are required" });
+  if (
+    !firstName ||
+    !lastName ||
+    !phoneNo ||
+    !dob ||
+    !address ||
+    !gender ||
+    !email
+  ) {
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   // Ensure user exists before updating
   const checkQuery = `SELECT * FROM ${table_name} WHERE email = ?`;
   db.query(checkQuery, [email], (err, result) => {
-      if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({ error: "Database error" });
-      }
-      if (result.length === 0) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      // Update profile if user exists
-      const updateQuery = `
+    // Update profile if user exists
+    const updateQuery = `
           UPDATE ${table_name} 
           SET firstname = ?, lastname = ?, pnumber = ?, dob = ?, address = ?, gender = ?
           WHERE email = ?
       `;
 
-      db.query(updateQuery, [firstName, lastName, phoneNo, dob, address, gender, email], (err, result) => {
-          if (err) {
-              console.error("Database error:", err);
-              return res.status(500).json({ error: "Database error" });
-          }
-          res.json({ message: "Profile updated successfully!" });
-      });
+    db.query(
+      updateQuery,
+      [firstName, lastName, phoneNo, dob, address, gender, email],
+      (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ error: "Database error" });
+        }
+        res.json({ message: "Profile updated successfully!" });
+      }
+    );
   });
 });
 
-app.put("/update_profile_picture", profile_picture_upload.single("profilePicture"), async (req, res) => {
-  const { email } = req.body;
-  const { role } = req.session.user;
+app.put(
+  "/update_profile_picture",
+  profile_picture_upload.single("profilePicture"),
+  async (req, res) => {
+    const { email } = req.body;
+    const { role } = req.session.user;
 
-  if (!req.file) {
+    if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
-  }
+    }
 
-  let table_name;
-  switch (role) {
-    case 4: table_name = "student_master"; break;
-    case 3: table_name = "faculty_master";
-  }
+    let table_name;
+    switch (role) {
+      case 1:
+        table_name = "admin_master";
+        break;
+      case 4:
+        table_name = "student_master";
+        break;
+      case 3:
+        table_name = "faculty_master";
+    }
 
-  const fetchImageQuery = `SELECT image FROM ${table_name} WHERE email = ?`;
+    const fetchImageQuery = `SELECT image FROM ${table_name} WHERE email = ?`;
 
-  db.query(fetchImageQuery, [email], (err, imageResult) => {
+    db.query(fetchImageQuery, [email], (err, imageResult) => {
       if (err) {
-          console.error("❌ Database Error:", err);
-          return res.status(500).json({ message: "Error retrieving profile picture", error: err.message });
+        console.error("❌ Database Error:", err);
+        return res.status(500).json({
+          message: "Error retrieving profile picture",
+          error: err.message,
+        });
       }
 
       if (imageResult.length > 0) {
-          const oldImage = imageResult[0].image;
+        const oldImage = imageResult[0].image;
 
-          // 🚨 Ensure the old image is not "default_profile.jpg" before deleting
-          if (oldImage && oldImage !== "default_profile.jpg") {
-              const oldImagePath = path.join(__dirname, "../frontend/public", oldImage);
+        // 🚨 Ensure the old image is not "default_profile.jpg" before deleting
+        if (oldImage && oldImage !== "default_profile.jpg") {
+          const oldImagePath = path.join(
+            __dirname,
+            "../frontend/public",
+            oldImage
+          );
 
-              fs.unlink(oldImagePath, (unlinkErr) => {
-                  if (unlinkErr && unlinkErr.code !== "ENOENT") {
-                      console.error("⚠️ Error deleting old image:", unlinkErr);
-                  } else {
-                      console.log("✅ Old profile picture deleted successfully.");
-                  }
-              });
-          }
+          fs.unlink(oldImagePath, (unlinkErr) => {
+            if (unlinkErr && unlinkErr.code !== "ENOENT") {
+              console.error("⚠️ Error deleting old image:", unlinkErr);
+            } else {
+              console.log("✅ Old profile picture deleted successfully.");
+            }
+          });
+        }
       }
 
       // Save new image filename
@@ -317,14 +372,18 @@ app.put("/update_profile_picture", profile_picture_upload.single("profilePicture
       const updateQuery = `UPDATE ${table_name} SET image = ? WHERE email = ?`;
 
       db.query(updateQuery, [newImagePath, email], (updateErr, result) => {
-          if (updateErr) {
-              console.error("❌ Database error:", updateErr);
-              return res.status(500).json({ error: "Database error" });
-          }
-          res.json({ message: "Profile Picture updated successfully!", imageUrl: `/uploads/${newImagePath}` });
+        if (updateErr) {
+          console.error("❌ Database error:", updateErr);
+          return res.status(500).json({ error: "Database error" });
+        }
+        res.json({
+          message: "Profile Picture updated successfully!",
+          imageUrl: `/uploads/${newImagePath}`,
+        });
       });
-  });
-});
+    });
+  }
+);
 
 //Dlete Profile Picture
 app.delete("/delete_profile_picture", async (req, res) => {
@@ -333,20 +392,29 @@ app.delete("/delete_profile_picture", async (req, res) => {
 
   let table_name;
   switch (role) {
-    case 4: table_name = "student_master"; break;
-    case 3: table_name = "faculty_master";
+    case 1:
+      table_name = "admin_master";
+      break;
+    case 4:
+      table_name = "student_master";
+      break;
+    case 3:
+      table_name = "faculty_master";
   }
 
   const fetchImageQuery = `SELECT image FROM ${table_name} WHERE email = ?`;
 
   db.query(fetchImageQuery, [email], (err, imageResult) => {
     if (err) {
-      return res.status(500).json({ message: "Error retrieving profile picture", error: err.message });
+      return res.status(500).json({
+        message: "Error retrieving profile picture",
+        error: err.message,
+      });
     }
-  
+
     if (imageResult.length > 0 && imageResult[0].image) {
       const imageName = imageResult[0].image;
-  
+
       // 🔥 Determine folder based on role
       let imageFolder = "";
       switch (role) {
@@ -368,82 +436,87 @@ app.delete("/delete_profile_picture", async (req, res) => {
         default:
           return res.status(400).json({ message: "Invalid role" });
       }
-  
+
       // 🧩 Build the full image path
-      const imagePath = path.join(__dirname, "../frontend/public", imageFolder, imageName);
-  
+      const imagePath = path.join(
+        __dirname,
+        "../frontend/public",
+        imageFolder,
+        imageName
+      );
+
       // 🔄 Delete the image
       fs.unlink(imagePath, (unlinkErr) => {
         if (unlinkErr && unlinkErr.code !== "ENOENT") {
           console.error("Error deleting image:", unlinkErr);
           return res.status(500).json({ message: "Failed to delete image" });
         }
-  
+
         // 🛠 Update DB to set default image
         const updateQuery = `UPDATE ${table_name} SET image = "default_profile.jpg" WHERE email = ?`;
         db.query(updateQuery, [email], (updateErr) => {
           if (updateErr) {
             return res.status(500).json({ error: "Database error" });
           }
-  
+
           res.json({ message: "Profile picture deleted successfully!" });
         });
       });
     } else {
       res.status(404).json({ message: "No profile picture found" });
     }
-  });  
+  });
 });
 
 app.post("/change_password", async (req, res) => {
   if (!req.session.user) {
-      return res.status(401).json({ error: "Unauthorized access" });
+    return res.status(401).json({ error: "Unauthorized access" });
   }
 
   const { currentPassword, newPassword } = req.body;
   const userEmail = req.session.user.email;
 
   try {
-      // Fetch user from DB
-      const sql = "SELECT password FROM users WHERE username = ?";
-      db.query(sql, [userEmail], async (err, result) => {
-          if (err) {
-              console.error("Database Error:", err);
-              return res.status(500).json({ error: "Server error" });
-          }
+    // Fetch user from DB
+    const sql = "SELECT password FROM users WHERE username = ?";
+    db.query(sql, [userEmail], async (err, result) => {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json({ error: "Server error" });
+      }
 
-          if (result.length === 0) {
-              return res.status(404).json({ error: "User not found" });
-          }
+      if (result.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
 
-          const hashedPassword = result[0].password;
+      const hashedPassword = result[0].password;
 
-          // Compare passwords
-          const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
-          if (!isMatch) {
-              return res.status(401).json({ error: "Current password is incorrect" });
-          }
+      // Compare passwords
+      const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
+      if (!isMatch) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
 
-          // Hash new password
-          const saltRounds = 10;
-          const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      // Hash new password
+      const saltRounds = 10;
+      const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-          // Update password in DB
-          const updateSql = "UPDATE users SET password = ? WHERE username = ?";
-          db.query(updateSql, [newHashedPassword, userEmail], (updateErr) => {
-              if (updateErr) {
-                  console.error("Update Error:", updateErr);
-                  return res.status(500).json({ error: "Could not update password" });
-              }
-              req.session.pass = {
-                password: newPassword,
-              };
-              res.json({ message: "Password changed successfully" });
-          });
+      // Update password in DB
+      const updateSql = "UPDATE users SET password = ? WHERE username = ?";
+      db.query(updateSql, [newHashedPassword, userEmail], (updateErr) => {
+        if (updateErr) {
+          console.error("Update Error:", updateErr);
+          return res.status(500).json({ error: "Could not update password" });
+        }
+        req.session.pass = {
+          password: newPassword,
+        };
+        res.json({ message: "Password changed successfully" });
       });
+    });
   } catch (error) {
-      console.error("Error:", error);
-      res.status(500).json({ error: "Internal server error" });
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 // Get all classes
@@ -1417,8 +1490,10 @@ app.post("/forgot_password", (req, res) => {
         SELECT email, uid, firstname, lastname FROM student_master WHERE email LIKE ?
         UNION ALL
         SELECT email, uid, firstname, lastname FROM faculty_master WHERE email LIKE ?
+        UNION ALL
+        SELECT email, uid, firstname, lastname FROM admin_master WHERE email LIKE ?
     `;
-  const placeholders = new Array(2).fill(`${email}%`);
+  const placeholders = new Array(3).fill(`${email}%`);
 
   db.query(findEmail, placeholders, (err, result) => {
     if (err) return res.status(500).json({ error: "Internal server error" });
@@ -1490,8 +1565,10 @@ app.post("/verify_otp", (req, res) => {
     SELECT uid, firstname, lastname FROM student_master WHERE email = ?
     UNION ALL
     SELECT uid, firstname, lastname FROM faculty_master WHERE email = ?
+    UNION ALL
+    SELECT uid, firstname, lastname FROM admin_master WHERE email = ?
   `;
-  const values = [email, email];
+  const values = [email, email, email];
 
   db.query(findUserQuery, values, (err, result) => {
     if (err || result.length === 0) {
@@ -1570,6 +1647,486 @@ app.post("/reset_password", async (req, res) => {
     return res.status(500).json({ error: "Server error." });
   }
 });
+
+const material_storage = multer.diskStorage({
+  destination: path.join(__dirname, "../frontend/public/material"),
+  filename: (req, file, cb) => {
+    const material_name = req.body.materialTitle + " " + req.body.chapter; // Fix: Use `chapter`, not `selectedChapters`
+    cb(null, material_name + path.extname(file.originalname));
+  },
+});
+
+const material_upload = multer({ storage: material_storage });
+
+// ✅ API Route to Upload Material
+
+// Add Material
+app.post("/material", material_upload.single("file"), async (req, res) => {
+  try {
+    console.log("Body Data:", req.body);
+    console.log("File Data:", req.file);
+
+    const { materialTitle, class: materialClass, subject, chapter } = req.body;
+    const file = req.file ? req.file.filename : null; // Fix: Use `filename`, not `materialname`
+
+    if (!file) return res.status(400).json({ message: "File upload failed" });
+
+    const sql = `INSERT INTO material_detail 
+                 (material_title, class, subject, chapter, material_file) 
+                 VALUES (?, ?, ?, ?, ?)`;
+    const values = [materialTitle, materialClass, subject, chapter, file]; // Fix: Use `file`, not `image`
+
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        console.error("Error inserting material:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+      res.json({ message: "Material uploaded successfully" });
+    });
+  } catch (error) {
+    console.error("Server Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get Material
+app.get("/materials", (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ error: "Unauthorized. No active session." });
+  }
+
+  const userID = req.session.user.userId;
+  const { role } = req.session.user;
+
+  // ✅ Roles 1 (Admin), 2 (Parent), 3 (Faculty) get all materials
+  if (role == 1 || role == 2 || role == 3) {
+    const materialQuery = "SELECT * FROM material_detail";
+    db.query(materialQuery, (err, materials) => {
+      if (err) {
+        console.error("Error fetching materials:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      return res.json(materials);
+    });
+  } else {
+    // 👨‍🎓 Assume student role
+    const classIdQuery = "SELECT classid FROM student_master WHERE uid = ?";
+
+    db.query(classIdQuery, [userID], (err, classResult) => {
+      if (err) {
+        console.error("❌ Error fetching class ID:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      if (classResult.length === 0) {
+        return res.status(404).json({ error: "Student not found" });
+      }
+
+      const classId = classResult[0].classid;
+
+      // 🏫 Get class_name from class_master
+      const classNameQuery = "SELECT class_name FROM class_master WHERE class_id = ?";
+      db.query(classNameQuery, [classId], (err, nameResult) => {
+        if (err) {
+          console.error("❌ Error fetching class name:", err);
+          return res.status(500).json({ error: "Database error" });
+        }
+
+        if (nameResult.length === 0) {
+          return res.status(404).json({ error: "Class not found" });
+        }
+
+        const className = nameResult[0].class_name;
+
+        // 📚 Get materials for the class name
+        const materialQuery = "SELECT * FROM material_detail WHERE class = ?";
+        db.query(materialQuery, [className], (err, materials) => {
+          if (err) {
+            console.error("❌ Error fetching materials:", err);
+            return res.status(500).json({ error: "Database error" });
+          }
+
+          return res.json(materials);
+        });
+      });
+    });
+  }
+});
+
+// DELETE Material API
+app.delete("/material/:id", (req, res) => {
+  const materialId = req.params.id;
+
+  // Get the file name before deleting
+  const getFileQuery =
+    "SELECT material_file FROM material_detail WHERE material_id = ?";
+  db.query(getFileQuery, [materialId], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    const fileName = result[0].material_file;
+    const filePath = path.join(
+      __dirname,
+      "../frontend/public/material",
+      fileName
+    ); // Adjust path as needed
+
+    // Delete the file from the server
+    fs.unlink(filePath, (fileErr) => {
+      if (fileErr && fileErr.code !== "ENOENT") {
+        console.error("Error deleting file:", fileErr);
+        return res
+          .status(500)
+          .json({ message: "Error deleting file", error: fileErr });
+      }
+
+      // Delete the record from the database
+      const deleteQuery = "DELETE FROM material_detail WHERE material_id = ?";
+      db.query(deleteQuery, [materialId], (dbErr) => {
+        if (dbErr) {
+          return res
+            .status(500)
+            .json({ message: "Database error while deleting", error: dbErr });
+        }
+
+        res.status(200).json({ message: "Material deleted successfully" });
+      });
+    });
+  });
+});
+
+const MATERIALS_DIR = path.join(__dirname, "../frontend/public/material");
+
+app.use("/material", express.static(MATERIALS_DIR));
+
+// ✅ API to Download a File
+app.get("/download/:fileName", (req, res) => {
+  const fileName = req.params.fileName;
+  const filePath = path.join(MATERIALS_DIR, fileName);
+
+  res.download(filePath, fileName, (err) => {
+    if (err) {
+      console.error("Error downloading file:", err);
+      res.status(500).json({ message: "File not found" });
+    }
+  });
+});
+
+// Add leave
+app.post("/add-leave", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "Unauthorized. Please log in." });
+  }
+
+  const { leaveReason, fromDate, toDate } = req.body;
+  const { userId, role } = req.session.user;
+
+  let role_name, sql;
+
+  if (role === 3) {
+    role_name = "Faculty";
+    sql = "SELECT firstname, lastname, email FROM faculty_master WHERE uid = ?";
+  } else {
+    role_name = "Student";
+    sql = "SELECT firstname, lastname, email FROM student_master WHERE uid = ?";
+  }
+
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      console.error("SQL Error:", err);
+      return res
+        .status(500)
+        .json({ message: "Error inside server", error: err });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { firstname, lastname, email } = result[0];
+    const fullName = `${firstname} ${lastname}`;
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    const oneDay = 1000 * 60 * 60 * 24;
+    const diffInDays = Math.round((end - start) / oneDay) + 1;
+    const today = new Date();
+    const current_date = today.toISOString().split("T")[0];
+
+    const Sql = `INSERT INTO leave_detail (full_name, email, leave_reason, leave_day, from_date, to_date, applyed_on, role) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    db.query(
+      Sql,
+      [
+        fullName,
+        email,
+        leaveReason,
+        diffInDays,
+        fromDate,
+        toDate,
+        current_date,
+        role_name,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("SQL Error:", err);
+          return res
+            .status(500)
+            .json({ message: "Database insertion error", error: err });
+        }
+        res
+          .status(200)
+          .json({ message: "Leave application submitted successfully" });
+      }
+    );
+  });
+});
+
+// Get Leave
+app.get("/get-leave", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({
+      message: "Unauthorized access",
+      session: req.session,
+    });
+  }
+
+  const { email, role } = req.session.user;
+  console.log("✅ User email from session:", email);
+
+  let sql;
+  let params = [];
+
+  if (role === 1) {
+    // Admin sees all pending leave requests
+    sql = "SELECT * FROM leave_detail WHERE status = 0";
+  } else if (role === 3) {
+    // Parent sees only pending Student leaves
+    sql = "SELECT * FROM leave_detail WHERE role = 'Student' AND status = 0";
+  } else if (role === 2) {
+    // Faculty sees only pending Faculty leaves
+    sql = "SELECT * FROM leave_detail WHERE role = 'Faculty' AND status = 0";
+  } else if (role === 4) {
+    // Student sees their own leaves (email LIKE match)
+    sql = "SELECT * FROM leave_detail WHERE email LIKE ?";
+    params = [`%${email}%`];
+  } else {
+    return res.status(403).json({ message: "Access forbidden: Unknown role" });
+  }
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      console.error("❌ SQL Error:", err);
+      return res
+        .status(500)
+        .json({ message: "Error inside server", error: err });
+    }
+    return res.json(result);
+  });
+});
+
+// Get Master
+app.get("/master", (req, res) => {
+  console.log("🔍 Session Debug:", req.session); // ✅ Log session
+
+  if (!req.session.user) {
+    return res.status(401).json({
+      message: "Unauthorized access",
+      session: req.session, // ✅ Return session object for debugging
+    });
+  }
+
+  const email = req.session.user.email;
+  const role = req.session.user.role;
+  console.log("🔍 Session User ID:", req.session.user.userId); // ✅ Log user ID
+  console.log("✅ User email from session:", email);
+
+  const sql = `
+      SELECT image, firstname, lastname FROM admin_master WHERE email LIKE ?
+      UNION ALL
+      SELECT image, firstname, lastname FROM student_master WHERE email LIKE ?
+      UNION ALL
+      SELECT image, firstname, lastname FROM faculty_master WHERE email LIKE ?
+  `;
+
+  const emailSearch = `%${email}%`;
+
+  db.query(sql, [emailSearch, emailSearch, emailSearch], (err, result) => {
+    if (err) {
+      console.error("❌ Database Error:", err);
+      return res
+        .status(500)
+        .json({ message: "Error inside server", error: err.message });
+    }
+    console.log("✅ Query Result:", result);
+    return res.status(200).json({
+      role: role,
+      data: result[0] || null,
+    });
+  });
+});
+
+//Update Status on Leave
+app.patch("/leave/:id", (req, res) => {
+  const { id } = req.params;
+  const { status, email, fullName, reason, fromDate, toDate } = req.body; // Get email & name from frontend
+
+  if (typeof status !== "number") {
+    return res.status(400).json({ error: "Invalid status value" });
+  }
+
+  const sql = "UPDATE leave_detail SET status = ? WHERE leave_id = ?";
+  db.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error("Error updating leave status:", err);
+      return res.status(500).json({ error: "Database update failed" });
+    }
+
+    // ✅ If status is Active (1), send an email
+    if (status === 1) {
+      const mailOptions = {
+        from: '"Edusphere School" <edusphere@gmail.com>',
+        to: email,
+        subject: "Leave Request Approved ✅",
+        html: `<div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; padding: 40px; background: linear-gradient(to bottom, #2c3e50, #1c2833); color: #fff; border-radius: 10px; text-align: center;">
+  
+  <!-- Header -->
+  <h1 style="margin-bottom: 10px; font-size: 28px;">✅ Leave Request <span style="color: #2ecc71;">Approved</span>!</h1>
+  <p style="font-size: 16px; color: #ddd;">Hello <strong>${fullName}</strong>, your leave request has been successfully approved.</p>
+
+  <!-- Leave Details Box -->
+  <div style="background: rgba(255, 255, 255, 0.15); padding: 25px; border-radius: 10px; backdrop-filter: blur(10px); box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2); margin-top: 20px;">
+      <h3 style="color: #f1c40f;">📅 Leave Summary</h3>
+      <p><strong>🧾 Reason:</strong> <span style="color: #ecf0f1;">${reason}</span></p>
+      <p><strong>📆 From:</strong> <span style="color: #f1c40f;">${fromDate}</span></p>
+      <p><strong>📆 To:</strong> <span style="color: #f1c40f;">${toDate}</span></p>
+      <p style="font-size: 14px; color: #2ecc71;"><strong>✔ Enjoy your time off! Make sure to return rejuvenated.</strong></p>
+
+      <!-- Dashboard Button -->
+      <div style="margin-top: 20px;">
+          <a href="http://localhost:5173/" target="_blank"
+             style="background: #3498db; color: #fff; padding: 12px 24px; font-size: 18px; font-weight: bold; border-radius: 5px; text-decoration: none; display: inline-block; box-shadow: 0 2px 5px rgba(255, 255, 255, 0.3);">
+              🔗 Go to Dashboard
+          </a>
+      </div>
+  </div>
+
+  <!-- Encouragement Section -->
+  <div style="margin-top: 20px; text-align: center;">
+      <h2 style="color: #f1c40f;">🧘‍♀️ Recharge & Refresh!</h2>
+      <p style="font-size: 16px; color: #ddd;">
+          Taking time off is essential. We're glad you're taking care of yourself.
+      </p>
+      <p style="font-style: italic; font-size: 14px; color: #bbb;">
+          "Almost everything will work again if you unplug it for a few minutes… including you." – Anne Lamott
+      </p>
+  </div>
+
+  <!-- Footer -->
+  <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 5px;">
+      <p style="font-size: 18px;"><strong>Take Care,</strong></p>
+      <p style="font-size: 16px;">🧑‍💼 HR Department – Easy Way</p>
+      <p style="font-size: 14px;">📧 support@edusphere.com | 🌐 <a href="https://www.edusphere.com" style="color: #f1c40f; text-decoration: underline;">www.edusphere.com</a></p>
+  </div>
+</div>`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          return res.status(500).json({ error: "Email sending failed" });
+        }
+        console.log("Email sent:", info.response);
+      });
+    }
+    res.json({ message: "Leave status updated successfully", status });
+  });
+});
+
+app.get("/dashboard_totals", (req, res) => {
+  console.log("✅ API /dashboard_totals hit");
+
+  if (!req.session.user) {
+      console.log("❌ No session found");
+      return res.status(401).json({
+          message: "Unauthorized access",
+          session: req.session
+      });
+  }
+
+  const role = req.session.user.role;
+  const email = req.session.user.email;
+  console.log("✅ User email from session:", email);
+
+  const sql = `
+      SELECT email FROM admin_master WHERE email LIKE ?
+      UNION ALL
+      SELECT email FROM student_master WHERE email LIKE ?
+      UNION ALL
+      SELECT email FROM faculty_master WHERE email LIKE ?
+      
+  `;
+
+  const emailSearch = `%${email}%`;
+
+  db.query(sql, [emailSearch, emailSearch, emailSearch], (err, result) => {
+      if (err) {
+          console.error("❌ Database Error:", err);
+          return res.status(500).json({ message: "Error inside server", error: err.message });
+      }
+      const matchEmail = result[0].email;
+      let queries = {};
+
+      if (role === 1 || role === 3) { // ✅ Corrected comparison
+          queries = {
+              students: "SELECT COUNT(*) AS total FROM student_master",
+              faculty: "SELECT COUNT(*) AS total FROM faculty_master",
+              classes: "SELECT COUNT(*) AS total FROM class_master",
+              subjects: "SELECT COUNT(*) AS total FROM subject_master",
+          };
+      } else if (role === 4) {
+        queries = {
+          notes: "SELECT COUNT(*) AS total FROM notes_master",
+        };
+      } else {
+          console.log("❌ Unauthorized Role");
+          return res.status(403).json({ message: "Unauthorized role" });
+      }
+
+      let responseData = {};
+      let completedQueries = 0;
+      const totalQueries = Object.keys(queries).length;
+
+      console.log("✅ Queries to Execute:", queries);
+
+      for (let key in queries) {
+          const query = queries[key];
+          
+
+          db.query(query, (err, results) => {
+              if (err) {
+                  console.error(`❌ Error fetching ${key}:`, err);
+                  return res.status(500).json({ error: `Database error fetching ${key}` });
+              }
+
+              console.log(`✅ Result for ${key}:`, results);
+              responseData[key] = results[0]?.total || 0; // Handle NULL results
+              completedQueries++;
+
+              if (completedQueries === totalQueries) {
+                  console.log("✅ Final API Response:", responseData);
+                  res.json(responseData);
+              }
+          });
+      }
+  });
+});
+
 
 // Start the server
 app.listen(8081, () => {

@@ -7,12 +7,34 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import axios from "axios";
 const Holiday = () => {
   const [months, setMonths] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [holidays, setHolidays] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState(null);
+  const [role, setRole] = useState("");
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:8081/master", {
+        withCredentials: true,
+      });
+
+      const userData = res.data.data;
+      const userRole = res.data.role;
+
+      if (userData) {
+        setRole(userRole);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching profile data:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // GetMonth
   useEffect(() => {
@@ -123,7 +145,6 @@ const Holiday = () => {
       }
     });
   };
-  
 
   return (
     <div className="p-6">
@@ -164,7 +185,11 @@ const Holiday = () => {
                   <th className="px-4 py-2 text-left">Sr No.</th>
                   <th className="px-4 py-2 text-left">Holiday Name</th>
                   <th className="px-4 py-2 text-left">Date</th>
-                  <th className="px-4 py-2">Action</th>
+                  {(role === 1 ||role === 3) && (
+                    <>
+                      <th className="px-4 py-2">Action</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -173,20 +198,24 @@ const Holiday = () => {
                     <td className="px-4 py-2">{index + 1}</td>
                     <td className="px-4 py-2">{holiday.holiday_name}</td>
                     <td className="px-4 py-2">{holiday.holiday_date}</td>
-                    <td className="px-4 py-2 flex justify-center gap-4">
-                      <button
-                        onClick={() => handleEditClick(holiday)}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        <FaEdit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(holiday.hid)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <MdDelete className="w-5 h-5" />
-                      </button>
-                    </td>
+                    {(role === 1 || role === 3) && (
+                      <>
+                        <td className="px-4 py-2 flex justify-center gap-4">
+                          <button
+                            onClick={() => handleEditClick(holiday)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(holiday.hid)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <MdDelete className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>

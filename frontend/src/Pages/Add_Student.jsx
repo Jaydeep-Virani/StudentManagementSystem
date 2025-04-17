@@ -44,7 +44,14 @@ const Add_Student = () => {
     dob: Yup.string().required("Please Enter Date Of Birth"),
     gender: Yup.string().required("Please Select Gender"),
     address: Yup.string().required("Please Enter Address"),
-    image: Yup.mixed().required("Please Select Image"),
+    image: Yup.mixed()
+      .required("Please select Image")
+      .test(
+        "fileType",
+        "Only PNG, JPG and JPEG files are allowed",
+        (value) =>
+          value && ["image/png", "image/jpg", "image/jpeg"].includes(value.type)
+      ),
   });
 
   const formik = useFormik({

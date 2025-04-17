@@ -72,22 +72,22 @@ const App = () => {
         <Route path="/" element={<Login setUserRole={setUserRole} />} />
         <Route path="/logout" element={ <Logout /> } />
 
-        <Route path="/dashboard" element={ <ProtectedRoute element={<MasterPage><Dashboard /></MasterPage>} allowedRoles={[1, 2, 3, 4, 5]} userRole={userRole} /> }/>
-        <Route path="/student_manage" element={ <ProtectedRoute element={<MasterPage><Student_Manage /></MasterPage>} allowedRoles={[3]} userRole={userRole} /> }/>
-        <Route path="/add_student" element={ <ProtectedRoute element={<MasterPage><Add_Student /></MasterPage>} allowedRoles={[3]} userRole={userRole} /> }/>
-        <Route path="/add_faculty" element={ <ProtectedRoute element={<MasterPage><Add_Faculty /></MasterPage>} allowedRoles={[3]} userRole={userRole} /> }/>
-        <Route path="/faculty_manage" element={ <ProtectedRoute element={<MasterPage><FacultyManage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/holiday" element={ <ProtectedRoute element={<MasterPage><Holiday /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/add_holiday" element={ <ProtectedRoute element={<MasterPage><Add_Holiday /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/profile" element={ <ProtectedRoute element={<MasterPage><Profile /></MasterPage>} allowedRoles={[3,4]} userRole={userRole} /> }/>
-        <Route path="/change_password" element={ <ProtectedRoute element={<MasterPage><Change_Password /></MasterPage>} allowedRoles={[3,4]} userRole={userRole} /> }/>
-        <Route path="/class_manage" element={ <ProtectedRoute element={<MasterPage><Class_Manage /></MasterPage>} allowedRoles={[3]} userRole={userRole} /> }/>
-        <Route path="/subject_manage" element={ <ProtectedRoute element={<MasterPage><Subject_Manage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/note_manage" element={ <ProtectedRoute element={<MasterPage><Note_Manage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/materials" element={ <ProtectedRoute element={<MasterPage><Material /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/add_material" element={ <ProtectedRoute element={<MasterPage><Add_Material /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/add_leave" element={ <ProtectedRoute element={<MasterPage><Add_Leave /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
-        <Route path="/leave_manage" element={ <ProtectedRoute element={<MasterPage><Leave_Manage /></MasterPage>} allowedRoles={[4]} userRole={userRole} /> }/>
+        <Route path="/dashboard" element={ <ProtectedRoute element={<MasterPage><Dashboard /></MasterPage>} allowedRoles={[1, 3, 4]} userRole={userRole} /> }/>
+        <Route path="/student_manage" element={ <ProtectedRoute element={<MasterPage><Student_Manage /></MasterPage>} allowedRoles={[1,3]} userRole={userRole} /> }/>
+        <Route path="/add_student" element={ <ProtectedRoute element={<MasterPage><Add_Student /></MasterPage>} allowedRoles={[1,3]} userRole={userRole} /> }/>
+        <Route path="/add_faculty" element={ <ProtectedRoute element={<MasterPage><Add_Faculty /></MasterPage>} allowedRoles={[1]} userRole={userRole} /> }/>
+        <Route path="/faculty_manage" element={ <ProtectedRoute element={<MasterPage><FacultyManage /></MasterPage>} allowedRoles={[1]} userRole={userRole} /> }/>
+        <Route path="/holiday" element={ <ProtectedRoute element={<MasterPage><Holiday /></MasterPage>} allowedRoles={[1,3,4]} userRole={userRole} /> }/>
+        <Route path="/add_holiday" element={ <ProtectedRoute element={<MasterPage><Add_Holiday /></MasterPage>} allowedRoles={[1,3]} userRole={userRole} /> }/>
+        <Route path="/profile" element={ <ProtectedRoute element={<MasterPage><Profile /></MasterPage>} allowedRoles={[1,3,4]} userRole={userRole} /> }/>
+        <Route path="/change_password" element={ <ProtectedRoute element={<MasterPage><Change_Password /></MasterPage>} allowedRoles={[1,3,4]} userRole={userRole} /> }/>
+        <Route path="/class_manage" element={ <ProtectedRoute element={<MasterPage><Class_Manage /></MasterPage>} allowedRoles={[1,3]} userRole={userRole} /> }/>
+        <Route path="/subject_manage" element={ <ProtectedRoute element={<MasterPage><Subject_Manage /></MasterPage>} allowedRoles={[1,3]} userRole={userRole} /> }/>
+        <Route path="/note_manage" element={ <ProtectedRoute element={<MasterPage><Note_Manage /></MasterPage>} allowedRoles={[1,3,4]} userRole={userRole} /> }/>
+        <Route path="/materials" element={ <ProtectedRoute element={<MasterPage><Material /></MasterPage>} allowedRoles={[1,3,4]} userRole={userRole} /> }/>
+        <Route path="/add_material" element={ <ProtectedRoute element={<MasterPage><Add_Material /></MasterPage>} allowedRoles={[1,3]} userRole={userRole} /> }/>
+        <Route path="/add_leave" element={ <ProtectedRoute element={<MasterPage><Add_Leave /></MasterPage>} allowedRoles={[3,4]} userRole={userRole} /> }/>
+        <Route path="/leave_manage" element={ <ProtectedRoute element={<MasterPage><Leave_Manage /></MasterPage>} allowedRoles={[1,3,4]} userRole={userRole} /> }/>
 
         <Route path="/forgot_password" element={ <Forgot_Password /> } />
         <Route path="/verify_otp" element={ <OTP_Verify /> } />

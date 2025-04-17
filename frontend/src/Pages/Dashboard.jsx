@@ -1,81 +1,92 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Dashboard_Card from "../Components/Dashboard_Card";
 
 const Dashboard = () => {
+  const [userSession, setUserSession] = useState(null);
+  const [totals, setTotals] = useState({
+    students: 0,
+    faculty: 0,
+    classes: 0,
+    subjects: 0,
+    notes:0,
+  });
+
+  const checkSession = async () => {
+    try {
+      const response = await axios.get("http://localhost:8081/session", {
+        withCredentials: true,
+      });
+      setUserSession(response.data.user);
+    } catch (error) {
+      console.error("No Active Session:", error.response?.data || error);
+      setUserSession(null);
+    }
+  };
+
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  useEffect(() => {
+    if (userSession) {
+      axios
+        .get("http://localhost:8081/dashboard_totals", {
+          withCredentials: true,
+        })
+        .then((response) => {
+          console.log("✅ API Response Data:", response.data);
+          setTotals({
+            students: response.data.students || 0,
+            faculty: response.data.faculty || 0,
+            classes: response.data.classes || 0,
+            subjects: response.data.subjects || 0,
+            notes: response.data.notes || 0,
+          });
+        })
+        .catch((error) => {
+          console.error("❌ API Fetch Error:", error);
+        });
+    }
+  }, [userSession]);
+
+  const role = userSession?.role;
+
+  const renderCards = () => {
+    if (role === 1) {
+      // Admin
+      return (
+        <>
+          <Dashboard_Card name="Students" total={totals.students} link="/student_manage" />
+          <Dashboard_Card name="Faculty" total={totals.faculty} link="/faculty_manage" />
+          <Dashboard_Card name="Class" total={totals.classes} link="/class_manage" />
+          <Dashboard_Card name="Subjects" total={totals.subjects} link="/subject_manage" />
+        </>
+      );
+    }else if (role === 3) {
+      return (
+        <>
+          <Dashboard_Card name="Students" total={totals.students} link="/student_manage" />
+          <Dashboard_Card name="Class" total={totals.classes} link="/class_manage" />
+          <Dashboard_Card name="Subjects" total={totals.subjects} link="/subject_manage" />
+        </>
+      );
+    } else if (role === 4) {
+      // Student
+      return (
+        <>
+          <Dashboard_Card name="Notes" total={totals.notes} link="/note_manage" />
+        </>
+      );
+    } else {
+      return <div>❌ Unauthorized access</div>;
+    }
+  };
+
   return (
-    <>
-      <div className="flex flex-wrap gap-6 justify-start">
-        {/* Students */}
-        <div className="w-[300px] h-[150px] bg-white shadow-lg rounded-lg hover:shadow-xl hover:scale-104  transition-shadow">
-          <Link to="/student" className="block">
-            <div className="text-center bg-blue-600 hover:bg-blue-500 rounded-t-lg py-4">
-              <span className="text-xl font-semibold text-white">
-                Students
-              </span>
-            </div>
-          </Link>
-          <div className="mt-4 text-center">
-            <span className="text-gray-500">Total: 250</span>
-          </div>
-        </div>
-
-        {/* Teachers */}
-        <div className="w-[300px] h-[150px] bg-white shadow-lg rounded-lg hover:shadow-xl hover:scale-104 transition-shadow">
-          <Link to="/teacher" className="block">
-            <div className="text-center bg-blue-600 hover:bg-blue-500 rounded-t-lg py-4">
-              <span className="text-xl font-semibold text-white">
-                Teachers
-              </span>
-            </div>
-          </Link>
-          <div className="mt-4 text-center">
-            <span className="text-gray-500">Total: 20</span>
-          </div>
-        </div>
-
-        {/* Parents */}
-        <div className="w-[300px] h-[150px] bg-white shadow-lg rounded-lg hover:shadow-xl hover:scale-104 transition-shadow">
-          <Link to="/parent" className="block">
-            <div className="text-center bg-blue-600 hover:bg-blue-500 rounded-t-lg py-4">
-              <span className="text-xl font-semibold text-white">
-                Parents
-              </span>
-            </div>
-          </Link>
-          <div className="mt-4 text-center">
-            <span className="text-gray-500">Total: 250</span>
-          </div>
-        </div>
-
-        {/* Class */}
-        <div className="w-[300px] h-[150px] bg-white shadow-lg rounded-lg hover:shadow-xl hover:scale-104 transition-shadow">
-          <Link to="/class" className="block">
-            <div className="text-center bg-blue-600 hover:bg-blue-500 rounded-t-lg py-4">
-              <span className="text-xl font-semibold text-white">
-                Class
-              </span>
-            </div>
-          </Link>
-          <div className="mt-4 text-center">
-            <span className="text-gray-500">Total: 10</span>
-          </div>
-        </div>
-
-        {/* Subjects */}
-        <div className="w-[300px] h-[150px] bg-white shadow-lg rounded-lg hover:shadow-xl hover:scale-104 transition-shadow">
-          <Link to="/subject" className="block">
-            <div className="text-center bg-blue-600 hover:bg-blue-500 rounded-t-lg py-4">
-              <span className="text-xl font-semibold text-white">
-                Subjects
-              </span>
-            </div>
-          </Link>
-          <div className="mt-4 text-center">
-            <span className="text-gray-500">Total: 12</span>
-          </div>
-        </div>
-      </div>
-      <div></div>
-    </>
+    <div className="flex flex-wrap gap-6 justify-start">
+      {renderCards()}
+    </div>
   );
 };
 

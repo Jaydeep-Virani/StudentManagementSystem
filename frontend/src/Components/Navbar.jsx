@@ -6,6 +6,10 @@ import axios from "axios";
 import { motion } from "framer-motion";
 
 export const Navbar = () => {
+  const [image, setImage] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState("");
   const [lockPassword, setLockPassword] = useState(null);
   const checkPassword = async () => {
     try {
@@ -60,12 +64,41 @@ export const Navbar = () => {
       setError("Incorrect password. Please try again.");
     }
   };
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:8081/master", {
+        withCredentials: true,
+      });
+
+      const userData = res.data.data;
+      const userRole = res.data.role;
+
+      if (userData) {
+        setImage(userData.image);
+        setFirstName(userData.firstname);
+        setLastName(userData.lastname);
+        setRole(userRole);
+      }
+      // console.log("✅ Image URL:", userData?.image);
+      // console.log("✅ Role:", userRole);
+      // console.log("✅ First Name:", userData?.firstname);
+      // console.log("✅ Last Name:", userData?.lastname);
+    } catch (err) {
+      console.error("❌ Error fetching profile data:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <>
       <nav className="p-4 fixed w-full z-10 flex items-center justify-between bg-blue-600 text-white">
         <div className="flex items-center">
           <Link to={"/dashboard"}>
-            <img src="./Logo/IMG_1599.PNG" alt="" className="ml-4 w-[200px]" />
+            <img src="./Logo/IMG_1599.PNG/" alt="" className="ml-4 w-[200px]" />
           </Link>
         </div>
         <div className="flex items-center space-x-4">
@@ -74,8 +107,25 @@ export const Navbar = () => {
               onClick={toggleDropdown}
               className="bg-dark-500 p-2 rounded text-white flex items-center"
             >
-              <img src="profile.png" className="w-8 h-8 mr-3 rounded-full" />
-              Virani Jaydeep
+              {role === 1 && (
+                <img
+                  src={"AdminImage/" + image}
+                  className="w-8 h-8 mr-3 rounded-full"
+                />
+              )}
+              {role === 3 && (
+                <img
+                  src={"FacultyImage/" + image}
+                  className="w-8 h-8 mr-3 rounded-full"
+                />
+              )}
+              {role === 4 && (
+                <img
+                  src={"StudentImage/" + image}
+                  className="w-8 h-8 mr-3 rounded-full"
+                />
+              )}
+              {firstName + " " + lastName}
               <IoMdArrowDropdown className="ml-2 w-5 h-5" />
             </button>
             {dropdownOpen && (

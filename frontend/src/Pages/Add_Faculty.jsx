@@ -27,12 +27,23 @@ const Add_Faculty = () => {
     lastName: Yup.string().required("Please Enter Last Name"),
     email: Yup.string().email("Invalid Email").required("Please Enter Email"),
     subjects: Yup.array().min(1, "Select At Least One Subject"),
-    phoneNo: Yup.string().matches(/^\d{10}$/, "Phone Number Must Be 10 Digits").required("Required"),
-    ephoneNo: Yup.string().matches(/^\d{10}$/, "Emergency Phone Must Be 10 Digits").required("Required"),
+    phoneNo: Yup.string()
+      .matches(/^\d{10}$/, "Phone Number Must Be 10 Digits")
+      .required("Required"),
+    ephoneNo: Yup.string()
+      .matches(/^\d{10}$/, "Emergency Phone Must Be 10 Digits")
+      .required("Required"),
     dob: Yup.string().required("Enter Date Of Birth"),
     gender: Yup.string().required("Select Gender"),
     address: Yup.string().required("Enter Address"),
-    image: Yup.mixed().required("Select Image"),
+    image: Yup.mixed()
+      .required("Please select Image")
+      .test(
+        "fileType",
+        "Only PNG, JPG and JPEG files are allowed",
+        (value) =>
+          value && ["image/png", "image/jpg", "image/jpeg"].includes(value.type)
+      ),
   });
 
   const formik = useFormik({
@@ -60,13 +71,26 @@ const Add_Faculty = () => {
           }
         });
 
-        await axios.post("http://localhost:8081/add-faculty", formData, { headers: { "Content-Type": "multipart/form-data" } });
+        await axios.post("http://localhost:8081/add-faculty", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-        Swal.fire({ title: "Success!", text: "Faculty Added Successfully", icon: "success", timer: 1500, showConfirmButton: false })
-          .then(() => navigate("/faculty_manage"));
+        Swal.fire({
+          title: "Success!",
+          text: "Faculty Added Successfully",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        }).then(() => navigate("/faculty_manage"));
       } catch (error) {
         console.error("❌ Error Adding Faculty:", error);
-        Swal.fire({ title: "Error!", text: error.response?.data?.message || "Failed to add faculty", icon: "error", timer: 1500, showConfirmButton: false });
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Failed to add faculty",
+          icon: "error",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     },
   });
